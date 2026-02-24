@@ -3,14 +3,6 @@
 
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Button } from '$lib/components/ui/button'
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle
-  } from '$lib/components/ui/card'
   import { Input } from '$lib/components/ui/input'
   import { Label } from '$lib/components/ui/label'
 
@@ -120,57 +112,57 @@
   <title>감정일기 | 학생 코드 입력</title>
 </svelte:head>
 
-<div class="mx-auto flex min-h-screen max-w-xl items-center px-6 py-10">
-  <Card class="w-full py-0">
-    <CardHeader class="pb-0">
+<div class="mx-auto flex min-h-screen w-full max-w-3xl items-center px-6 py-12">
+  <section class="w-full space-y-10">
+    <div class="space-y-3">
       <p class="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">TapTapTap</p>
-      <CardTitle class="mt-2 text-3xl">감정일기 시작하기</CardTitle>
-      <CardDescription>선생님이 알려준 6자리 학생 코드를 입력해 주세요.</CardDescription>
-    </CardHeader>
+      <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">감정일기 시작하기</h1>
+      <p class="text-muted-foreground text-lg">선생님이 알려준 6자리 학생 코드를 입력해 주세요.</p>
+    </div>
 
-    <CardContent class="pt-6">
-      <form method="POST" class="space-y-4">
-        <div class="space-y-2">
-          <Label for="student-code-0">학생 코드</Label>
-          <input type="hidden" name="code" value={joinedCode} />
+    <form method="POST" class="space-y-5">
+      <div class="space-y-3">
+        <Label for="student-code-0" class="text-base">학생 코드</Label>
+        <input type="hidden" name="code" value={joinedCode} />
 
-          <div class="flex items-center gap-2 sm:gap-3">
-            {#each codeDigits as digit, index (index)}
-              <Input
-                id={`student-code-${index}`}
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                maxlength={1}
-                value={digit}
-                class="h-12 w-11 text-center text-lg font-semibold sm:w-12"
-                aria-label={`학생 코드 ${index + 1}번째 숫자`}
-                autocomplete="one-time-code"
-                onfocus={(event) => (event.currentTarget as HTMLInputElement).select()}
-                oninput={(event) => handleDigitInput(index, event)}
-                onkeydown={(event) => handleDigitKeydown(index, event)}
-                onpaste={(event) => handleDigitPaste(index, event)}
-                required={index === 0}
-              />
-            {/each}
-          </div>
-          <p class="text-muted-foreground text-xs">6자리 숫자를 순서대로 입력해 주세요.</p>
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          {#each codeDigits as digit, index (index)}
+            <Input
+              id={`student-code-${index}`}
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength={1}
+              value={digit}
+              class="h-14 w-12 rounded-xl text-center text-xl font-semibold sm:w-14"
+              aria-label={`학생 코드 ${index + 1}번째 숫자`}
+              autocomplete="one-time-code"
+              onfocus={(event) => (event.currentTarget as HTMLInputElement).select()}
+              oninput={(event) => handleDigitInput(index, event)}
+              onkeydown={(event) => handleDigitKeydown(index, event)}
+              onpaste={(event) => handleDigitPaste(index, event)}
+              required={index === 0}
+            />
+          {/each}
         </div>
+        <p class="text-muted-foreground text-xs">6자리 숫자를 순서대로 입력해 주세요.</p>
+      </div>
 
-        {#if errorMessage}
-          <Alert variant="destructive">
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        {/if}
+      {#if errorMessage}
+        <Alert variant="destructive">
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      {/if}
 
-        <Button type="submit" class="h-11 w-full">감정일기 쓰러 가기</Button>
-      </form>
-    </CardContent>
+      <Button type="submit" class="h-12 w-full rounded-xl text-base sm:w-auto sm:min-w-64">
+        감정일기 쓰러 가기
+      </Button>
+    </form>
 
-    <CardFooter class="border-t pt-4">
+    <div class="border-border border-t pt-5">
       <Button href="/teacher/login" variant="link" class="px-0 text-muted-foreground">
         교사 대시보드 로그인
       </Button>
-    </CardFooter>
-  </Card>
+    </div>
+  </section>
 </div>

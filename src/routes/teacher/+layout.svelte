@@ -9,7 +9,7 @@
 {#if data.isLoginPage}
   {@render children()}
 {:else}
-  <div class="bg-muted/30 min-h-screen">
+  <div class="bg-background min-h-screen">
     <header class="bg-background border-b">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <div>

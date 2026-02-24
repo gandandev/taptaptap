@@ -2,13 +2,6 @@
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Badge, type BadgeVariant } from '$lib/components/ui/badge'
   import { Button } from '$lib/components/ui/button'
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-  } from '$lib/components/ui/card'
   import { EMOTION_TREE } from '$lib/shared/emotion-tree'
 
   import type { PageProps } from './$types'
@@ -33,18 +26,16 @@
 </svelte:head>
 
 <div class="space-y-4">
-  <Card class="py-0">
-    <CardHeader>
-      <div class="flex flex-wrap items-start justify-between gap-2">
-        <div class="space-y-2">
-          <Button href="/teacher" variant="outline" size="sm">오늘 목록으로</Button>
-          <CardTitle class="text-2xl">{data.student.name}</CardTitle>
-          <CardDescription>학생 코드 {data.student.code}</CardDescription>
-        </div>
-        <Badge variant="outline">기록 {data.entries.length}건</Badge>
+  <section class="space-y-3 border-b pb-5">
+    <div class="flex flex-wrap items-start justify-between gap-2">
+      <div class="space-y-2">
+        <Button href="/teacher" variant="outline" size="sm">오늘 목록으로</Button>
+        <h2 class="text-2xl font-semibold tracking-tight">{data.student.name}</h2>
+        <p class="text-muted-foreground text-sm">학생 코드 {data.student.code}</p>
       </div>
-    </CardHeader>
-  </Card>
+      <Badge variant="outline">기록 {data.entries.length}건</Badge>
+    </div>
+  </section>
 
   {#if data.entries.length === 0}
     <Alert>
@@ -52,17 +43,15 @@
     </Alert>
   {:else}
     {#each data.entries as entry}
-      <Card class="py-0">
-        <CardHeader class="pb-0">
-          <div class="flex flex-wrap items-center gap-2">
-            <CardTitle class="text-lg">{entry.entryDate}</CardTitle>
-            <Badge variant={moodBadgeVariant(entry.moodPrimary)} class={moodBadgeClass(entry.moodPrimary)}>
-              {entry.moodPrimary}
-            </Badge>
-          </div>
-        </CardHeader>
+      <section class="space-y-4 border-b pb-5 last:border-b-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h3 class="text-lg font-semibold tracking-tight">{entry.entryDate}</h3>
+          <Badge variant={moodBadgeVariant(entry.moodPrimary)} class={moodBadgeClass(entry.moodPrimary)}>
+            {entry.moodPrimary}
+          </Badge>
+        </div>
 
-        <CardContent class="space-y-3 pt-5">
+        <div class="space-y-3">
           {#each entry.answers as answer, i (`${entry.id}-${answer.questionId}-${i}`)}
             <div class="bg-muted/40 rounded-lg border p-3">
               <p class="text-muted-foreground text-[11px] tracking-wide uppercase">
@@ -71,8 +60,8 @@
               <p class="mt-1 text-sm leading-relaxed">{answer.answer}</p>
             </div>
           {/each}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     {/each}
   {/if}
 </div>

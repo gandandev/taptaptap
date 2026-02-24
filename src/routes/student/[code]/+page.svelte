@@ -4,14 +4,6 @@
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Badge } from '$lib/components/ui/badge'
   import { Button } from '$lib/components/ui/button'
-  import {
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-  } from '$lib/components/ui/card'
   import { Input } from '$lib/components/ui/input'
   import { EMOTION_TREE, EMOTION_TREE_START_ID } from '$lib/shared/emotion-tree'
   import type { EmotionAnswer } from '$lib/shared/emotion-types'
@@ -135,99 +127,95 @@
 </svelte:head>
 
 <div class="mx-auto max-w-3xl px-4 py-6">
-  <Card class="py-0">
-    <CardHeader class="border-b pb-5">
+  <section class="space-y-5">
+    <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-5">
       <div class="space-y-2">
         <Badge variant="outline" class="font-mono">학생 코드 {data.student.code}</Badge>
-        <CardTitle class="text-2xl">{data.student.name}의 감정일기</CardTitle>
-        <CardDescription>오늘 날짜 (KST): {data.todayDate}</CardDescription>
+        <h1 class="text-2xl font-semibold tracking-tight">{data.student.name}의 감정일기</h1>
+        <p class="text-muted-foreground text-sm">오늘 날짜 (KST): {data.todayDate}</p>
       </div>
-      <CardAction>
-        <Button href="/" variant="outline" size="sm">코드 다시 입력</Button>
-      </CardAction>
-    </CardHeader>
+      <Button href="/" variant="outline" size="sm">코드 다시 입력</Button>
+    </div>
 
-    <CardContent class="space-y-4 pt-5">
-      {#if successMessage}
-        <Alert>
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      {/if}
+    {#if successMessage}
+      <Alert>
+        <AlertDescription>{successMessage}</AlertDescription>
+      </Alert>
+    {/if}
 
-      {#if errorMessage}
-        <Alert variant="destructive">
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
-      {/if}
+    {#if errorMessage}
+      <Alert variant="destructive">
+        <AlertDescription>{errorMessage}</AlertDescription>
+      </Alert>
+    {/if}
 
-      <div class="bg-muted/40 rounded-lg border p-4">
-        {#if displayedAnswers.length > 0}
-          <div class="space-y-4">
-            {#each displayedAnswers as answer, i (`${answer.questionId}-${i}`)}
-              <div class="space-y-1">
-                <p class="text-muted-foreground text-[11px] tracking-wide uppercase">
-                  {EMOTION_TREE[answer.questionId]?.question ?? answer.questionId}
-                </p>
-                <p class="text-sm leading-relaxed">{answer.answer}</p>
-              </div>
-            {/each}
-          </div>
-        {:else}
-          <p class="text-muted-foreground text-sm">아직 작성한 답변이 없어요.</p>
-        {/if}
-      </div>
-
-      {#if done}
-        <div class="flex flex-wrap gap-2">
-          <Button type="button" variant="secondary" onclick={startRewrite}>다시 쓰기</Button>
+    <div class="bg-muted/40 rounded-lg border p-4">
+      {#if displayedAnswers.length > 0}
+        <div class="space-y-4">
+          {#each displayedAnswers as answer, i (`${answer.questionId}-${i}`)}
+            <div class="space-y-1">
+              <p class="text-muted-foreground text-[11px] tracking-wide uppercase">
+                {EMOTION_TREE[answer.questionId]?.question ?? answer.questionId}
+              </p>
+              <p class="text-sm leading-relaxed">{answer.answer}</p>
+            </div>
+          {/each}
         </div>
       {:else}
-        <div class="space-y-4">
-          <div>
-            <p class="text-lg font-medium">{currentNode.question}</p>
-          </div>
-
-          {#if currentNode.choices.length > 0}
-            <div class="flex flex-wrap gap-2">
-              {#each currentNode.choices as choice (choice.label)}
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={saving}
-                  class="h-auto py-2 text-left whitespace-normal"
-                  onclick={() => pickChoice(questionId, choice.label, choice.nextId)}
-                >
-                  {choice.label}
-                </Button>
-              {/each}
-            </div>
-          {/if}
-
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <Input
-              type="text"
-              bind:value={freeText}
-              placeholder={isFinalQuestion ? '오늘 하고 싶은 말을 자유롭게 써도 돼' : '직접 써도 돼요'}
-              class="h-10 flex-1"
-              disabled={saving}
-              onkeydown={(event) => {
-                if (event.key === 'Enter') {
-                  submitText(questionId)
-                }
-              }}
-            />
-            <Button type="button" variant="outline" disabled={saving} onclick={() => submitText(questionId)}>
-              텍스트로 답하기
-            </Button>
-          </div>
-
-          {#if isFinalQuestion}
-            <Button type="button" disabled={saving} onclick={() => void finish()}>
-              {saving ? '저장 중...' : '오늘 감정일기 저장'}
-            </Button>
-          {/if}
-        </div>
+        <p class="text-muted-foreground text-sm">아직 작성한 답변이 없어요.</p>
       {/if}
-    </CardContent>
-  </Card>
+    </div>
+
+    {#if done}
+      <div class="flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" onclick={startRewrite}>다시 쓰기</Button>
+      </div>
+    {:else}
+      <div class="space-y-4">
+        <div>
+          <p class="text-lg font-medium">{currentNode.question}</p>
+        </div>
+
+        {#if currentNode.choices.length > 0}
+          <div class="flex flex-wrap gap-2">
+            {#each currentNode.choices as choice (choice.label)}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={saving}
+                class="h-auto py-2 text-left whitespace-normal"
+                onclick={() => pickChoice(questionId, choice.label, choice.nextId)}
+              >
+                {choice.label}
+              </Button>
+            {/each}
+          </div>
+        {/if}
+
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="text"
+            bind:value={freeText}
+            placeholder={isFinalQuestion ? '오늘 하고 싶은 말을 자유롭게 써도 돼' : '직접 써도 돼요'}
+            class="h-10 flex-1"
+            disabled={saving}
+            onkeydown={(event) => {
+              if (event.key === 'Enter') {
+                submitText(questionId)
+              }
+            }}
+          />
+          <Button type="button" variant="outline" disabled={saving} onclick={() => submitText(questionId)}>
+            텍스트로 답하기
+          </Button>
+        </div>
+
+        {#if isFinalQuestion}
+          <Button type="button" disabled={saving} onclick={() => void finish()}>
+            {saving ? '저장 중...' : '오늘 감정일기 저장'}
+          </Button>
+        {/if}
+      </div>
+    {/if}
+  </section>
 </div>
