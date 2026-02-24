@@ -1,9 +1,31 @@
 <script lang="ts">
+  import { Alert, AlertDescription } from '$lib/components/ui/alert'
+  import { Badge, type BadgeVariant } from '$lib/components/ui/badge'
+  import { Button } from '$lib/components/ui/button'
+  import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+  } from '$lib/components/ui/card'
   import { EMOTION_TREE } from '$lib/shared/emotion-tree'
 
   import type { PageProps } from './$types'
 
   let { data }: PageProps = $props()
+
+  function moodBadgeVariant(mood: string): BadgeVariant {
+    if (mood === '안 좋아...') return 'destructive'
+    if (mood === '좋아!') return 'secondary'
+    return 'outline'
+  }
+
+  function moodBadgeClass(mood: string) {
+    if (mood === '좋아!') return 'bg-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/50 dark:text-sky-200'
+    if (mood === '그냥 그래') return 'bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-200'
+    return ''
+  }
 </script>
 
 <svelte:head>
@@ -11,45 +33,46 @@
 </svelte:head>
 
 <div class="space-y-4">
-  <div class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-    <a href="/teacher" class="text-sm text-stone-500 underline underline-offset-4 hover:text-stone-700">
-      ← 오늘 목록으로
-    </a>
-    <h2 class="mt-3 text-2xl font-semibold text-stone-900">{data.student.name}</h2>
-    <p class="mt-1 text-sm text-stone-500">학생 코드 {data.student.code}</p>
-  </div>
+  <Card class="py-0">
+    <CardHeader>
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div class="space-y-2">
+          <Button href="/teacher" variant="outline" size="sm">오늘 목록으로</Button>
+          <CardTitle class="text-2xl">{data.student.name}</CardTitle>
+          <CardDescription>학생 코드 {data.student.code}</CardDescription>
+        </div>
+        <Badge variant="outline">기록 {data.entries.length}건</Badge>
+      </div>
+    </CardHeader>
+  </Card>
 
   {#if data.entries.length === 0}
-    <div class="rounded-2xl border border-stone-200 bg-white p-6 text-stone-500 shadow-sm">
-      아직 제출된 감정일기가 없어요.
-    </div>
+    <Alert>
+      <AlertDescription>아직 제출된 감정일기가 없어요.</AlertDescription>
+    </Alert>
   {:else}
     {#each data.entries as entry}
-      <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div class="flex flex-wrap items-center gap-2">
-          <h3 class="text-lg font-semibold text-stone-900">{entry.entryDate}</h3>
-          <span
-            class="rounded-full px-2 py-1 text-xs font-medium {entry.moodPrimary === '안 좋아...'
-              ? 'bg-rose-100 text-rose-700'
-              : entry.moodPrimary === '좋아!'
-                ? 'bg-sky-100 text-sky-700'
-                : 'bg-amber-100 text-amber-700'}"
-          >
-            {entry.moodPrimary}
-          </span>
-        </div>
+      <Card class="py-0">
+        <CardHeader class="pb-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <CardTitle class="text-lg">{entry.entryDate}</CardTitle>
+            <Badge variant={moodBadgeVariant(entry.moodPrimary)} class={moodBadgeClass(entry.moodPrimary)}>
+              {entry.moodPrimary}
+            </Badge>
+          </div>
+        </CardHeader>
 
-        <div class="mt-4 space-y-4">
+        <CardContent class="space-y-3 pt-5">
           {#each entry.answers as answer, i (`${entry.id}-${answer.questionId}-${i}`)}
-            <div class="rounded-xl bg-stone-50 p-3">
-              <p class="text-xs tracking-wide text-stone-400 uppercase">
+            <div class="bg-muted/40 rounded-lg border p-3">
+              <p class="text-muted-foreground text-[11px] tracking-wide uppercase">
                 {EMOTION_TREE[answer.questionId]?.question ?? answer.questionId}
               </p>
-              <p class="mt-1 text-stone-700">{answer.answer}</p>
+              <p class="mt-1 text-sm leading-relaxed">{answer.answer}</p>
             </div>
           {/each}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     {/each}
   {/if}
 </div>

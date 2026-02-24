@@ -1,7 +1,40 @@
 <script lang="ts">
+  import { Alert, AlertDescription } from '$lib/components/ui/alert'
+  import { Badge, type BadgeVariant } from '$lib/components/ui/badge'
+  import { Button } from '$lib/components/ui/button'
+  import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+  } from '$lib/components/ui/card'
+  import { Input } from '$lib/components/ui/input'
+  import { Label } from '$lib/components/ui/label'
+  import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
+  } from '$lib/components/ui/table'
+
   import type { PageProps } from './$types'
 
   let { data, form }: PageProps = $props()
+
+  function moodBadgeVariant(mood: string): BadgeVariant {
+    if (mood === '안 좋아...') return 'destructive'
+    if (mood === '좋아!') return 'secondary'
+    return 'outline'
+  }
+
+  function moodBadgeClass(mood: string) {
+    if (mood === '좋아!') return 'bg-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/50 dark:text-sky-200'
+    if (mood === '그냥 그래') return 'bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-200'
+    return ''
+  }
 </script>
 
 <svelte:head>
@@ -9,120 +42,107 @@
 </svelte:head>
 
 <div class="grid gap-6 lg:grid-cols-[360px_1fr]">
-  <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-    <h2 class="text-lg font-semibold text-stone-900">학생 등록</h2>
-    <p class="mt-1 text-sm text-stone-500">이름을 입력하면 6자리 학생 코드가 자동 생성됩니다.</p>
+  <Card class="py-0">
+    <CardHeader class="pb-0">
+      <CardTitle>학생 등록</CardTitle>
+      <CardDescription>이름을 입력하면 6자리 학생 코드가 자동 생성됩니다.</CardDescription>
+    </CardHeader>
 
-    <form method="POST" class="mt-4 space-y-3">
-      <label class="block">
-        <span class="mb-2 block text-sm font-medium text-stone-700">학생 이름</span>
-        <input
-          type="text"
-          name="name"
-          placeholder="예: 김민지"
-          class="w-full rounded-xl border border-stone-200 px-4 py-3 text-stone-900 outline-none focus:border-stone-400"
-          required
-        />
-      </label>
+    <CardContent class="pt-6">
+      <form method="POST" class="space-y-4">
+        <div class="space-y-2">
+          <Label for="student-name">학생 이름</Label>
+          <Input
+            id="student-name"
+            type="text"
+            name="name"
+            placeholder="예: 김민지"
+            class="h-11"
+            required
+          />
+        </div>
 
-      {#if form?.message}
-        <p
-          class="rounded-xl px-3 py-2 text-sm {form.createdStudent
-            ? 'bg-emerald-50 text-emerald-700'
-            : 'bg-rose-50 text-rose-700'}"
-        >
-          {form.message}
-        </p>
-      {/if}
+        {#if form?.message}
+          <Alert variant={form.createdStudent ? 'default' : 'destructive'}>
+            <AlertDescription>{form.message}</AlertDescription>
+          </Alert>
+        {/if}
 
-      <button
-        type="submit"
-        class="w-full cursor-pointer rounded-xl bg-stone-900 px-4 py-3 font-medium text-white hover:bg-stone-800"
-      >
-        학생 추가
-      </button>
-    </form>
-  </section>
+        <Button type="submit" class="h-11 w-full">학생 추가</Button>
+      </form>
+    </CardContent>
+  </Card>
 
-  <section class="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <h2 class="text-lg font-semibold text-stone-900">오늘 제출 현황</h2>
-        <p class="text-sm text-stone-500">기준 날짜 (KST): {data.todayDate}</p>
+  <Card class="py-0">
+    <CardHeader class="pb-0">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <CardTitle>오늘 제출 현황</CardTitle>
+          <CardDescription>기준 날짜 (KST): {data.todayDate}</CardDescription>
+        </div>
+        <Badge variant="outline">총 {data.students.length}명</Badge>
       </div>
-      <span class="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-600">
-        총 {data.students.length}명
-      </span>
-    </div>
+    </CardHeader>
 
-    <div class="mt-4 overflow-x-auto">
-      <table class="min-w-full text-left text-sm">
-        <thead>
-          <tr class="border-b border-stone-100 text-stone-500">
-            <th class="px-2 py-2 font-medium">학생</th>
-            <th class="px-2 py-2 font-medium">코드</th>
-            <th class="px-2 py-2 font-medium">제출</th>
-            <th class="px-2 py-2 font-medium">감정</th>
-            <th class="px-2 py-2 font-medium">이유/메모</th>
-          </tr>
-        </thead>
-        <tbody>
+    <CardContent class="pt-6">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>학생</TableHead>
+            <TableHead>코드</TableHead>
+            <TableHead>제출</TableHead>
+            <TableHead>감정</TableHead>
+            <TableHead>이유/메모</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {#if data.students.length === 0}
-            <tr>
-              <td colspan="5" class="px-2 py-6 text-center text-stone-400">등록된 학생이 없어요.</td>
-            </tr>
+            <TableRow>
+              <TableCell colspan={5} class="text-muted-foreground py-8 text-center">
+                등록된 학생이 없어요.
+              </TableCell>
+            </TableRow>
           {:else}
             {#each data.students as student}
-              <tr class="border-b border-stone-50 align-top">
-                <td class="px-2 py-3">
-                  <a
-                    href={`/teacher/students/${student.studentId}`}
-                    class="font-medium text-stone-900 underline-offset-4 hover:underline"
-                  >
+              <TableRow class="align-top">
+                <TableCell class="font-medium">
+                  <Button href={`/teacher/students/${student.studentId}`} variant="link" class="h-auto px-0 py-0">
                     {student.name}
-                  </a>
-                </td>
-                <td class="px-2 py-3 font-mono text-stone-600">{student.code}</td>
-                <td class="px-2 py-3">
+                  </Button>
+                </TableCell>
+                <TableCell class="font-mono text-xs sm:text-sm">{student.code}</TableCell>
+                <TableCell>
                   {#if student.hasSubmittedToday}
-                    <span class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                    <Badge class="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-200">
                       제출함
-                    </span>
+                    </Badge>
                   {:else}
-                    <span class="rounded-full bg-stone-100 px-2 py-1 text-xs font-medium text-stone-500">
-                      미제출
-                    </span>
+                    <Badge variant="outline">미제출</Badge>
                   {/if}
-                </td>
-                <td class="px-2 py-3">
+                </TableCell>
+                <TableCell>
                   {#if student.moodPrimary}
-                    <span
-                      class="rounded-full px-2 py-1 text-xs font-medium {student.moodPrimary === '안 좋아...'
-                        ? 'bg-rose-100 text-rose-700'
-                        : student.moodPrimary === '좋아!'
-                          ? 'bg-sky-100 text-sky-700'
-                          : 'bg-amber-100 text-amber-700'}"
-                    >
+                    <Badge variant={moodBadgeVariant(student.moodPrimary)} class={moodBadgeClass(student.moodPrimary)}>
                       {student.moodPrimary}
-                    </span>
+                    </Badge>
                   {:else}
-                    <span class="text-stone-400">-</span>
+                    <span class="text-muted-foreground">-</span>
                   {/if}
-                </td>
-                <td class="px-2 py-3 text-stone-600">
+                </TableCell>
+                <TableCell class="whitespace-normal text-sm">
                   {#if student.badReasonSummary}
                     {student.badReasonSummary}
                   {:else if student.hasSubmittedToday}
-                    <span class="text-stone-400">(없음)</span>
+                    <span class="text-muted-foreground">(없음)</span>
                   {:else}
-                    <span class="text-stone-300">-</span>
+                    <span class="text-muted-foreground/60">-</span>
                   {/if}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             {/each}
           {/if}
-        </tbody>
-      </table>
-    </div>
-  </section>
+        </TableBody>
+      </Table>
+    </CardContent>
+  </Card>
 </div>

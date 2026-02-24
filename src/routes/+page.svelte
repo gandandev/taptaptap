@@ -1,4 +1,17 @@
 <script lang="ts">
+  import { Alert, AlertDescription } from '$lib/components/ui/alert'
+  import { Button } from '$lib/components/ui/button'
+  import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+  } from '$lib/components/ui/card'
+  import { Input } from '$lib/components/ui/input'
+  import { Label } from '$lib/components/ui/label'
+
   import type { PageProps } from './$types'
 
   let { data, form }: PageProps = $props()
@@ -12,43 +25,45 @@
 </svelte:head>
 
 <div class="mx-auto flex min-h-screen max-w-xl items-center px-6 py-10">
-  <div class="w-full rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
-    <p class="text-sm font-medium tracking-[0.2em] text-stone-400 uppercase">TapTapTap</p>
-    <h1 class="mt-3 text-3xl font-semibold text-stone-900">감정일기 시작하기</h1>
-    <p class="mt-2 text-stone-500">선생님이 알려준 6자리 학생 코드를 입력해 주세요.</p>
+  <Card class="w-full py-0">
+    <CardHeader class="pb-0">
+      <p class="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">TapTapTap</p>
+      <CardTitle class="mt-2 text-3xl">감정일기 시작하기</CardTitle>
+      <CardDescription>선생님이 알려준 6자리 학생 코드를 입력해 주세요.</CardDescription>
+    </CardHeader>
 
-    <form method="POST" class="mt-6 space-y-3">
-      <label class="block">
-        <span class="mb-2 block text-sm font-medium text-stone-700">학생 코드</span>
-        <input
-          name="code"
-          type="text"
-          inputmode="numeric"
-          pattern="[0-9]{6}"
-          maxlength="6"
-          value={codeValue}
-          placeholder="예: 012345"
-          class="w-full rounded-2xl border border-stone-200 px-4 py-3 text-lg tracking-[0.2em] text-stone-900 outline-none placeholder:tracking-normal placeholder:text-stone-300 focus:border-stone-400"
-          required
-        />
-      </label>
+    <CardContent class="pt-6">
+      <form method="POST" class="space-y-4">
+        <div class="space-y-2">
+          <Label for="student-code">학생 코드</Label>
+          <Input
+            id="student-code"
+            name="code"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength={6}
+            value={codeValue}
+            placeholder="예: 012345"
+            class="h-11 text-lg tracking-[0.2em] placeholder:tracking-normal"
+            required
+          />
+        </div>
 
-      {#if errorMessage}
-        <p class="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{errorMessage}</p>
-      {/if}
+        {#if errorMessage}
+          <Alert variant="destructive">
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        {/if}
 
-      <button
-        type="submit"
-        class="w-full cursor-pointer rounded-2xl bg-stone-900 px-4 py-3 font-medium text-white duration-100 hover:bg-stone-800 active:scale-[0.99]"
-      >
-        감정일기 쓰러 가기
-      </button>
-    </form>
+        <Button type="submit" class="h-11 w-full">감정일기 쓰러 가기</Button>
+      </form>
+    </CardContent>
 
-    <div class="mt-6 border-t border-stone-100 pt-4">
-      <a class="text-sm text-stone-500 underline underline-offset-4 hover:text-stone-700" href="/teacher/login">
+    <CardFooter class="border-t pt-4">
+      <Button href="/teacher/login" variant="link" class="px-0 text-muted-foreground">
         교사 대시보드 로그인
-      </a>
-    </div>
-  </div>
+      </Button>
+    </CardFooter>
+  </Card>
 </div>

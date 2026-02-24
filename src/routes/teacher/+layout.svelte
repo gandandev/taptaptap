@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Button } from '$lib/components/ui/button'
+
   import type { LayoutProps } from './$types'
 
   let { data, children }: LayoutProps = $props()
@@ -7,22 +9,17 @@
 {#if data.isLoginPage}
   {@render children()}
 {:else}
-  <div class="min-h-screen bg-stone-50">
-    <header class="border-b border-stone-200 bg-white">
+  <div class="bg-muted/30 min-h-screen">
+    <header class="bg-background border-b">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <div>
-          <p class="text-xs tracking-[0.18em] text-stone-400 uppercase">Teacher Dashboard</p>
-          <h1 class="text-lg font-semibold text-stone-900">감정일기 교사 대시보드</h1>
+          <p class="text-muted-foreground text-xs tracking-[0.18em] uppercase">Teacher Dashboard</p>
+          <h1 class="text-lg font-semibold">감정일기 교사 대시보드</h1>
         </div>
         <div class="flex items-center gap-2">
-          <a href="/teacher" class="rounded-lg px-3 py-2 text-sm text-stone-600 hover:bg-stone-100">오늘 목록</a>
+          <Button href="/teacher" variant="ghost" size="sm">오늘 목록</Button>
           <form method="POST" action="/teacher/logout">
-            <button
-              type="submit"
-              class="cursor-pointer rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-600 hover:bg-stone-100"
-            >
-              로그아웃
-            </button>
+            <Button type="submit" variant="outline" size="sm">로그아웃</Button>
           </form>
         </div>
       </div>
