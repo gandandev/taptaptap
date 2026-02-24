@@ -129,7 +129,7 @@
 
 <div class="mx-auto max-w-3xl px-4 py-6">
   <section class="space-y-5">
-    <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-5">
+    <div class="flex flex-wrap items-start justify-between gap-3 pb-5">
       <div class="space-y-2">
         <Badge variant="outline" class="font-mono">학생 코드 {data.student.code}</Badge>
         <h1 class="text-2xl font-semibold tracking-tight">{data.student.name}의 감정일기</h1>
