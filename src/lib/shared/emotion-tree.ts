@@ -99,6 +99,10 @@ export function validateEmotionAnswers(answers: EmotionAnswer[]) {
     return { ok: false as const, error: '답변이 비어 있어요.' }
   }
 
+  if (answers.length > 12) {
+    return { ok: false as const, error: '답변 개수가 너무 많아요.' }
+  }
+
   let expectedQuestionId: string | null = EMOTION_TREE_START_ID
 
   for (const answer of answers) {
@@ -118,6 +122,14 @@ export function validateEmotionAnswers(answers: EmotionAnswer[]) {
     const trimmed = answer.answer.trim()
     if (!trimmed) {
       return { ok: false as const, error: '빈 답변은 저장할 수 없어요.' }
+    }
+
+    if (trimmed.length > 200) {
+      return { ok: false as const, error: '답변이 너무 길어요.' }
+    }
+
+    if (answer.questionId.length > 64) {
+      return { ok: false as const, error: '질문 식별자가 올바르지 않아요.' }
     }
 
     if (answer.answerType === 'choice') {

@@ -33,10 +33,14 @@ export async function findStudentById(studentId: string) {
 }
 
 export async function createStudentWithAutoCode(name: string, maxAttempts = 20) {
-  const trimmedName = name.trim()
+  const trimmedName = name.trim().replace(/\s+/g, ' ')
 
   if (!trimmedName) {
     throw new Error('Student name is required')
+  }
+
+  if (trimmedName.length > 40) {
+    throw new Error('Student name is too long')
   }
 
   const db = getDb()

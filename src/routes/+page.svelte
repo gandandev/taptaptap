@@ -12,7 +12,9 @@
   let { data, form }: PageProps = $props()
 
   const CODE_LENGTH = 6
-  const initialCodeText = untrack(() => String(form?.code ?? ''))
+  const initialCodeText = untrack(() =>
+    form && 'code' in form && typeof form.code === 'string' ? form.code : ''
+  )
 
   let errorMessage = $derived(form?.message ?? data.errorMessage)
   let codeDigits = $state(
