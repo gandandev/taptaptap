@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle'
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Badge, type BadgeVariant } from '$lib/components/ui/badge'
   import { Button } from '$lib/components/ui/button'
@@ -16,6 +17,7 @@
   import type { PageProps } from './$types'
 
   let { data, form }: PageProps = $props()
+  let creatingStudent = $state(false)
 
   function moodBadgeVariant(mood: string): BadgeVariant {
     if (mood === '안 좋아...') return 'destructive'
@@ -41,7 +43,7 @@
       <p class="text-muted-foreground text-sm">이름을 입력하면 6자리 학생 코드가 자동 생성됩니다.</p>
     </div>
 
-    <form method="POST" class="space-y-4">
+    <form method="POST" class="space-y-4" onsubmit={() => (creatingStudent = true)}>
       <div class="space-y-2">
         <Label for="student-name">학생 이름</Label>
         <Input
@@ -50,6 +52,7 @@
           name="name"
           placeholder="예: 김민지"
           class="h-11"
+          disabled={creatingStudent}
           required
         />
       </div>
@@ -60,7 +63,14 @@
         </Alert>
       {/if}
 
-      <Button type="submit" class="h-11 w-full">학생 추가</Button>
+      <Button type="submit" class="h-11 w-full" disabled={creatingStudent}>
+        {#if creatingStudent}
+          <LoaderCircle class="size-4 animate-spin" />
+          추가 중...
+        {:else}
+          학생 추가
+        {/if}
+      </Button>
     </form>
   </section>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle'
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Button } from '$lib/components/ui/button'
   import { Input } from '$lib/components/ui/input'
@@ -7,6 +8,7 @@
   import type { PageProps } from './$types'
 
   let { form }: PageProps = $props()
+  let submitting = $state(false)
 </script>
 
 <svelte:head>
@@ -21,10 +23,10 @@
       <p class="text-muted-foreground text-sm">환경변수에 설정된 비밀번호로 로그인합니다.</p>
     </div>
 
-    <form method="POST" class="space-y-4">
+    <form method="POST" class="space-y-4" onsubmit={() => (submitting = true)}>
       <div class="space-y-2">
         <Label for="teacher-password">비밀번호</Label>
-        <Input id="teacher-password" type="password" name="password" class="h-11" required />
+        <Input id="teacher-password" type="password" name="password" class="h-11" disabled={submitting} required />
       </div>
 
       {#if form?.message}
@@ -33,7 +35,14 @@
         </Alert>
       {/if}
 
-      <Button type="submit" class="h-11 w-full">로그인</Button>
+      <Button type="submit" class="h-11 w-full" disabled={submitting}>
+        {#if submitting}
+          <LoaderCircle class="size-4 animate-spin" />
+          로그인 중...
+        {:else}
+          로그인
+        {/if}
+      </Button>
     </form>
   </section>
 </div>

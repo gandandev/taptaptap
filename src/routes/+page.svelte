@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle'
   import { untrack } from 'svelte'
 
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
@@ -18,6 +19,8 @@
     Array.from({ length: CODE_LENGTH }, (_, index) => initialCodeText[index]?.replace(/\D/g, '') ?? '')
   )
   let joinedCode = $derived(codeDigits.join(''))
+  let isCodeComplete = $derived(joinedCode.length === CODE_LENGTH)
+  let submitting = $state(false)
 
   function focusDigit(index: number) {
     const target = document.getElementById(`student-code-${index}`) as HTMLInputElement | null
@@ -29,6 +32,7 @@
     const next = [...codeDigits]
     next[index] = digit
     codeDigits = next
+    submitting = false
   }
 
   function fillDigitsFrom(index: number, rawValue: string) {
@@ -49,6 +53,7 @@
     }
 
     codeDigits = next
+    submitting = false
 
     focusDigit(Math.min(cursor, CODE_LENGTH - 1))
   }
@@ -120,7 +125,7 @@
       <p class="text-muted-foreground text-lg">선생님이 알려준 6자리 학생 코드를 입력해 주세요.</p>
     </div>
 
-    <form method="POST" class="space-y-5">
+    <form method="POST" class="space-y-5" onsubmit={() => (submitting = true)}>
       <div class="space-y-3">
         <Label for="student-code-0" class="text-base">학생 코드</Label>
         <input type="hidden" name="code" value={joinedCode} />
@@ -137,6 +142,7 @@
               class="h-14 w-12 rounded-xl text-center text-xl font-semibold sm:w-14"
               aria-label={`학생 코드 ${index + 1}번째 숫자`}
               autocomplete="one-time-code"
+              disabled={submitting}
               onfocus={(event) => (event.currentTarget as HTMLInputElement).select()}
               oninput={(event) => handleDigitInput(index, event)}
               onkeydown={(event) => handleDigitKeydown(index, event)}
@@ -154,8 +160,17 @@
         </Alert>
       {/if}
 
-      <Button type="submit" class="h-12 w-full rounded-xl text-base sm:w-auto sm:min-w-64">
-        감정일기 쓰러 가기
+      <Button
+        type="submit"
+        class="h-12 w-full rounded-xl text-base sm:w-auto sm:min-w-64"
+        disabled={submitting || !isCodeComplete}
+      >
+        {#if submitting}
+          <LoaderCircle class="size-4 animate-spin" />
+          확인 중...
+        {:else}
+          감정일기 쓰러 가기
+        {/if}
       </Button>
     </form>
 

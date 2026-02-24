@@ -1,9 +1,11 @@
 <script lang="ts">
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle'
   import { Button } from '$lib/components/ui/button'
 
   import type { LayoutProps } from './$types'
 
   let { data, children }: LayoutProps = $props()
+  let loggingOut = $state(false)
 </script>
 
 {#if data.isLoginPage}
@@ -18,8 +20,15 @@
         </div>
         <div class="flex items-center gap-2">
           <Button href="/teacher" variant="ghost" size="sm">오늘 목록</Button>
-          <form method="POST" action="/teacher/logout">
-            <Button type="submit" variant="outline" size="sm">로그아웃</Button>
+          <form method="POST" action="/teacher/logout" onsubmit={() => (loggingOut = true)}>
+            <Button type="submit" variant="outline" size="sm" disabled={loggingOut}>
+              {#if loggingOut}
+                <LoaderCircle class="size-4 animate-spin" />
+                로그아웃 중...
+              {:else}
+                로그아웃
+              {/if}
+            </Button>
           </form>
         </div>
       </div>

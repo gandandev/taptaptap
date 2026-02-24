@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle'
   import { untrack } from 'svelte'
 
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
@@ -212,7 +213,12 @@
 
         {#if isFinalQuestion}
           <Button type="button" disabled={saving} onclick={() => void finish()}>
-            {saving ? '저장 중...' : '오늘 감정일기 저장'}
+            {#if saving}
+              <LoaderCircle class="size-4 animate-spin" />
+              저장 중...
+            {:else}
+              오늘 감정일기 저장
+            {/if}
           </Button>
         {/if}
       </div>
