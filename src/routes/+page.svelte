@@ -11,7 +11,7 @@
 
   let { data, form }: PageProps = $props()
 
-  const CODE_LENGTH = 6
+  const CODE_LENGTH = 2
   const initialCodeText = untrack(() =>
     form && 'code' in form && typeof form.code === 'string' ? form.code : ''
   )
@@ -124,7 +124,7 @@
     <div class="space-y-3">
       <p class="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">TapTapTap</p>
       <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">감정일기 시작하기</h1>
-      <p class="text-muted-foreground text-lg">선생님이 알려준 6자리 학생 코드를 입력해 주세요.</p>
+      <p class="text-muted-foreground text-lg">선생님이 알려준 2자리 학생 코드를 입력해 주세요.</p>
     </div>
 
     <form method="POST" class="space-y-5" onsubmit={() => (submitting = true)}>
@@ -153,7 +153,7 @@
             />
           {/each}
         </div>
-        <p class="text-muted-foreground text-xs">6자리 숫자를 순서대로 입력해 주세요.</p>
+        <p class="text-muted-foreground text-xs">2자리 숫자를 순서대로 입력해 주세요.</p>
       </div>
 
       {#if errorMessage}

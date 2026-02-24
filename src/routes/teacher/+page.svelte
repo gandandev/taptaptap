@@ -40,7 +40,7 @@
   <section class="space-y-6">
     <div class="space-y-1 border-b pb-4">
       <h2 class="text-xl font-semibold tracking-tight">학생 등록</h2>
-      <p class="text-muted-foreground text-sm">이름을 입력하면 6자리 학생 코드가 자동 생성됩니다.</p>
+      <p class="text-muted-foreground text-sm">이름을 입력하면 2자리 학생 코드가 자동 생성됩니다.</p>
     </div>
 
     <form method="POST" class="space-y-4" onsubmit={() => (creatingStudent = true)}>

@@ -8,6 +8,13 @@
       "when": 1771919350924,
       "tag": "0000_stale_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771923717145,
+      "tag": "0001_chilly_jane_foster",
+      "breakpoints": true
     }
   ]
 }

@@ -5,7 +5,7 @@ import { getDb } from '$lib/server/db/client'
 import { students } from '$lib/server/db/schema'
 
 function generateStudentCode() {
-  return String(randomInt(0, 1_000_000)).padStart(6, '0')
+  return String(randomInt(0, 100)).padStart(2, '0')
 }
 
 function isUniqueViolation(error: unknown) {
@@ -13,7 +13,7 @@ function isUniqueViolation(error: unknown) {
 }
 
 export function isValidStudentCodeFormat(code: string) {
-  return /^\d{6}$/.test(code)
+  return /^\d{2}$/.test(code)
 }
 
 export async function findStudentByCode(code: string) {
@@ -32,7 +32,7 @@ export async function findStudentById(studentId: string) {
   return student ?? null
 }
 
-export async function createStudentWithAutoCode(name: string, maxAttempts = 20) {
+export async function createStudentWithAutoCode(name: string, maxAttempts = 200) {
   const trimmedName = name.trim().replace(/\s+/g, ' ')
 
   if (!trimmedName) {

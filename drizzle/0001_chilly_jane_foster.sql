@@ -1,0 +1,1 @@
+ALTER TABLE "students" ALTER COLUMN "code" SET DATA TYPE varchar(2);

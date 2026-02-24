@@ -43,7 +43,7 @@ export const actions: Actions = {
     if (!isValidStudentCodeFormat(code)) {
       return fail(400, {
         code,
-        message: '6자리 숫자 학생 코드를 입력해 주세요.'
+        message: '2자리 숫자 학생 코드를 입력해 주세요.'
       })
     }
 
