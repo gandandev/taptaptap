@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
+
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Button } from '$lib/components/ui/button'
   import {
@@ -16,8 +18,102 @@
 
   let { data, form }: PageProps = $props()
 
+  const CODE_LENGTH = 6
+  const initialCodeText = untrack(() => String(form?.code ?? ''))
+
   let errorMessage = $derived(form?.message ?? data.errorMessage)
-  let codeValue = $derived(form?.code ?? '')
+  let codeDigits = $state(
+    Array.from({ length: CODE_LENGTH }, (_, index) => initialCodeText[index]?.replace(/\D/g, '') ?? '')
+  )
+  let joinedCode = $derived(codeDigits.join(''))
+
+  function focusDigit(index: number) {
+    const target = document.getElementById(`student-code-${index}`) as HTMLInputElement | null
+    target?.focus()
+    target?.select()
+  }
+
+  function setDigit(index: number, digit: string) {
+    const next = [...codeDigits]
+    next[index] = digit
+    codeDigits = next
+  }
+
+  function fillDigitsFrom(index: number, rawValue: string) {
+    const digits = rawValue.replace(/\D/g, '')
+
+    if (!digits) {
+      setDigit(index, '')
+      return
+    }
+
+    const next = [...codeDigits]
+    let cursor = index
+
+    for (const digit of digits) {
+      if (cursor >= CODE_LENGTH) break
+      next[cursor] = digit
+      cursor += 1
+    }
+
+    codeDigits = next
+
+    focusDigit(Math.min(cursor, CODE_LENGTH - 1))
+  }
+
+  function handleDigitInput(index: number, event: Event) {
+    const target = event.currentTarget as HTMLInputElement
+    const value = target.value.replace(/\D/g, '')
+
+    if (!value) {
+      setDigit(index, '')
+      return
+    }
+
+    if (value.length > 1) {
+      fillDigitsFrom(index, value)
+      return
+    }
+
+    setDigit(index, value)
+
+    if (index < CODE_LENGTH - 1) {
+      focusDigit(index + 1)
+    }
+  }
+
+  function handleDigitKeydown(index: number, event: KeyboardEvent) {
+    if (event.key === 'Backspace') {
+      if (codeDigits[index]) {
+        event.preventDefault()
+        setDigit(index, '')
+        return
+      }
+
+      if (index > 0) {
+        event.preventDefault()
+        setDigit(index - 1, '')
+        focusDigit(index - 1)
+      }
+      return
+    }
+
+    if (event.key === 'ArrowLeft' && index > 0) {
+      event.preventDefault()
+      focusDigit(index - 1)
+      return
+    }
+
+    if (event.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
+      event.preventDefault()
+      focusDigit(index + 1)
+    }
+  }
+
+  function handleDigitPaste(index: number, event: ClipboardEvent) {
+    event.preventDefault()
+    fillDigitsFrom(index, event.clipboardData?.getData('text') ?? '')
+  }
 </script>
 
 <svelte:head>
@@ -35,19 +131,30 @@
     <CardContent class="pt-6">
       <form method="POST" class="space-y-4">
         <div class="space-y-2">
-          <Label for="student-code">학생 코드</Label>
-          <Input
-            id="student-code"
-            name="code"
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]{6}"
-            maxlength={6}
-            value={codeValue}
-            placeholder="예: 012345"
-            class="h-11 text-lg tracking-[0.2em] placeholder:tracking-normal"
-            required
-          />
+          <Label for="student-code-0">학생 코드</Label>
+          <input type="hidden" name="code" value={joinedCode} />
+
+          <div class="flex items-center gap-2 sm:gap-3">
+            {#each codeDigits as digit, index (index)}
+              <Input
+                id={`student-code-${index}`}
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength={1}
+                value={digit}
+                class="h-12 w-11 text-center text-lg font-semibold sm:w-12"
+                aria-label={`학생 코드 ${index + 1}번째 숫자`}
+                autocomplete="one-time-code"
+                onfocus={(event) => (event.currentTarget as HTMLInputElement).select()}
+                oninput={(event) => handleDigitInput(index, event)}
+                onkeydown={(event) => handleDigitKeydown(index, event)}
+                onpaste={(event) => handleDigitPaste(index, event)}
+                required={index === 0}
+              />
+            {/each}
+          </div>
+          <p class="text-muted-foreground text-xs">6자리 숫자를 순서대로 입력해 주세요.</p>
         </div>
 
         {#if errorMessage}
