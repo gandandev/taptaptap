@@ -32,6 +32,14 @@ export async function findStudentById(studentId: string) {
   return student ?? null
 }
 
+export async function deleteStudentById(studentId: string) {
+  const db = getDb()
+
+  const [deletedStudent] = await db.delete(students).where(eq(students.id, studentId)).returning()
+
+  return deletedStudent ?? null
+}
+
 export async function createStudentWithAutoCode(name: string, maxAttempts = 200) {
   const trimmedName = name.trim().replace(/\s+/g, ' ')
 

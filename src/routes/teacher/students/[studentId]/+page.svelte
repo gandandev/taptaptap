@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LoaderCircle from '@lucide/svelte/icons/loader-circle'
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Badge, type BadgeVariant } from '$lib/components/ui/badge'
   import { Button } from '$lib/components/ui/button'
@@ -6,7 +7,8 @@
 
   import type { PageProps } from './$types'
 
-  let { data }: PageProps = $props()
+  let { data, form }: PageProps = $props()
+  let deletingStudent = $state(false)
 
   function moodBadgeVariant(mood: string): BadgeVariant {
     if (mood === '안 좋아...') return 'destructive'
@@ -33,8 +35,37 @@
         <h2 class="text-2xl font-semibold tracking-tight">{data.student.name}</h2>
         <p class="text-muted-foreground text-sm">학생 코드 {data.student.code}</p>
       </div>
-      <Badge variant="outline">기록 {data.entries.length}건</Badge>
+      <div class="flex flex-wrap items-center justify-end gap-2">
+        <Badge variant="outline">기록 {data.entries.length}건</Badge>
+        <form
+          method="POST"
+          action="?/delete"
+          onsubmit={(event) => {
+            if (!confirm(`${data.student.name} 학생을 삭제할까요? 제출 기록도 함께 삭제됩니다.`)) {
+              event.preventDefault()
+              return
+            }
+
+            deletingStudent = true
+          }}
+        >
+          <Button type="submit" variant="destructive" size="sm" disabled={deletingStudent}>
+            {#if deletingStudent}
+              <LoaderCircle class="size-4 animate-spin" />
+              삭제 중...
+            {:else}
+              학생 삭제
+            {/if}
+          </Button>
+        </form>
+      </div>
     </div>
+    {#if form?.message}
+      <Alert variant="destructive">
+        <AlertDescription>{form.message}</AlertDescription>
+      </Alert>
+    {/if}
+    <p class="text-muted-foreground text-xs">삭제하면 학생 정보와 제출된 감정일기 기록이 함께 삭제됩니다.</p>
   </section>
 
   {#if data.entries.length === 0}
