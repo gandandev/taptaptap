@@ -1,12 +1,14 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
+
   import { EMOTION_TREE, EMOTION_TREE_START_ID } from '$lib/shared/emotion-tree'
   import type { EmotionAnswer } from '$lib/shared/emotion-types'
 
   import type { PageProps } from './$types'
 
   let { data }: PageProps = $props()
-  const initialSavedAnswers = data.savedEntry?.answers ?? []
-  const hasInitialSavedEntry = Boolean(data.savedEntry)
+  const initialSavedAnswers = untrack(() => data.savedEntry?.answers ?? [])
+  const hasInitialSavedEntry = untrack(() => Boolean(data.savedEntry))
 
   let answers: EmotionAnswer[] = $state([])
   let completedAnswers: EmotionAnswer[] = $state(initialSavedAnswers)
