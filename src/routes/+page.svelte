@@ -139,7 +139,7 @@
               pattern="[0-9]*"
               maxlength={1}
               value={digit}
-              class="h-14 w-12 rounded-xl text-center text-xl font-semibold sm:w-14"
+              class="h-16 w-12 rounded-xl text-center text-2xl font-semibold sm:w-14 sm:text-3xl"
               aria-label={`학생 코드 ${index + 1}번째 숫자`}
               autocomplete="one-time-code"
               disabled={submitting}
