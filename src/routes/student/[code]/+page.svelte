@@ -150,8 +150,8 @@
       </Alert>
     {/if}
 
-    <div class="bg-muted/40 rounded-lg border p-4">
-      {#if displayedAnswers.length > 0}
+    {#if displayedAnswers.length > 0}
+      <div class="bg-muted/40 rounded-lg border p-4">
         <div class="space-y-4">
           {#each displayedAnswers as answer, i (`${answer.questionId}-${i}`)}
             <div class="space-y-1">
@@ -162,10 +162,8 @@
             </div>
           {/each}
         </div>
-      {:else}
-        <p class="text-muted-foreground text-sm">아직 작성한 답변이 없어요.</p>
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     {#if done}
       <div class="flex flex-wrap gap-2">
