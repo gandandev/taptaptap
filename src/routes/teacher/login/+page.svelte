@@ -26,7 +26,7 @@
     <form method="POST" class="space-y-4" onsubmit={() => (submitting = true)}>
       <div class="space-y-2">
         <Label for="teacher-password">비밀번호</Label>
-        <Input id="teacher-password" type="password" name="password" class="h-11" disabled={submitting} required />
+        <Input id="teacher-password" type="password" name="password" class="h-11" required />
       </div>
 
       {#if form?.message}

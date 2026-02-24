@@ -52,7 +52,6 @@
           name="name"
           placeholder="예: 김민지"
           class="h-11"
-          disabled={creatingStudent}
           required
         />
       </div>
