@@ -5,7 +5,7 @@
 ## 기능
 
 - 학생: 이름과 4자리 PIN으로 6단계 클릭형 감정일기 작성/수정
-- 학생: 최초 접속 또는 교사 재설정 후 이름과 생일 확인으로 새 PIN 설정
+- 학생: 최초 접속 또는 교사 재설정 후 로그인 화면에서 입력한 4자리 PIN으로 새 PIN 설정
 - 학생: 확인된 기기에서는 7일간 세션 유지
 - 학생: OpenRouter 설정 시 AI 일기 요약과 조언 표시, 미설정 시 로컬 요약 표시
 - 교사: 비밀번호 로그인 후 학생 등록, 오늘 제출 현황, SEL 역량, 위기 알림, 학생별 이력 조회
@@ -32,7 +32,7 @@ cp .env.example .env
 - `TEACHER_SESSION_SECRET`
 - `TZ=Asia/Seoul`
 - `OPENROUTER_API_KEY` (선택, 없으면 로컬 요약 사용)
-- `OPENROUTER_MODEL=openai/gpt-oss-120b` (선택)
+- `OPENROUTER_MODEL=openai/gpt-oss-120b:nitro` (선택)
 
 3. 마이그레이션 생성/적용
 
@@ -57,21 +57,25 @@ pnpm dev
 ### Railway Variables
 
 - `DATABASE_URL` : Railway Postgres 연결 문자열
+- `DATABASE_PRIVATE_URL` : 선택. 앱과 Postgres가 같은 Railway 프로젝트/환경에 있으면 private/internal 연결 문자열을 넣으세요. 설정되어 있으면 `DATABASE_URL`보다 우선 사용합니다.
 - `TEACHER_DASHBOARD_PASSWORD` : 교사 로그인 비밀번호
 - `TEACHER_SESSION_SECRET` : 긴 랜덤 문자열
 - `TZ` : `Asia/Seoul`
 - `OPENROUTER_API_KEY` : AI 요약/조언 생성용 OpenRouter 키
-- `OPENROUTER_MODEL` : 기본값 `openai/gpt-oss-120b`
-- `PG_POOL_MAX` : 기본값 `2` (Railway 소형 배포 비용 절감을 위해 작게 유지 권장)
-- `PG_IDLE_TIMEOUT_MS` : 기본값 `10000`
-- `PG_CONNECTION_TIMEOUT_MS` : 기본값 `5000`
+- `OPENROUTER_MODEL` : 기본값 `openai/gpt-oss-120b:nitro`
+- `PG_POOL_MAX` : 기본값 `5`
+- `PG_IDLE_TIMEOUT_MS` : 기본값 `60000`
+- `PG_CONNECTION_TIMEOUT_MS` : 기본값 `3000`
+- `PG_ALLOW_EXIT_ON_IDLE` : 기본값 `false`
 
 ### Build / Start
 
 - `railway.json`에 Build command, Start command, healthcheck가 설정되어 있습니다.
 - Start command: `node --max-old-space-size=128 build`
 
-트래픽이 뜸한 개인/교실용 배포라면 Railway 서비스 설정에서 Serverless를 켜면 idle 시간의 리소스 사용량을 줄일 수 있습니다. 첫 요청은 cold boot 때문에 살짝 느릴 수 있습니다.
+속도가 중요하면 Railway 서비스 설정에서 Serverless를 끄는 편이 낫습니다. Serverless는 idle 비용을 줄이는 대신 첫 요청 cold boot가 생기고, DB 커넥션도 다시 데워져서 교실에서 “눌렀는데 한참 걸림”처럼 보일 수 있습니다.
+
+앱과 Postgres가 같은 Railway 프로젝트/환경에 있다면 TCP Proxy/public URL 대신 private networking URL을 쓰세요. public URL은 외부 접속용이라 DB 왕복 지연이 커질 수 있습니다.
 
 ### 배포 후 최초 실행
 
@@ -96,8 +100,8 @@ pnpm db:migrate
 - `.env`에 `DATABASE_URL`, `TEACHER_DASHBOARD_PASSWORD`, `TEACHER_SESSION_SECRET`, `TZ=Asia/Seoul`이 없으면 적절히 실패하는지 확인
 - `OPENROUTER_API_KEY`가 없어도 학생 제출 후 로컬 요약/조언이 표시되는지 확인
 - `OPENROUTER_API_KEY`가 있을 때 AI 요약/조언이 표시되고 실패 시 로컬 요약으로 fallback 되는지 확인
-- `pnpm db:migrate` 후 `students.birth_date`, `students.pin_hash`, `students.pin_reset_required` 컬럼이 생기는지 확인
-- 기존 학생의 생일/PIN이 비어 있어도 교사 상세 화면에서 생일 저장과 PIN 재설정/설정 흐름이 가능한지 확인
+- `pnpm db:migrate` 후 `students.pin_hash`, `students.pin_reset_required`, `students_name_unique` 제약이 생기는지 확인
+- 기존 학생의 PIN이 비어 있어도 로그인 화면에서 PIN 설정 흐름이 가능한지 확인
 
 ### 교사 인증
 
@@ -109,24 +113,22 @@ pnpm db:migrate
 
 ### 학생 등록/관리
 
-- 교사 대시보드에서 이름과 생일 `MMDD` 또는 `MM-DD`로 학생 등록이 되는지 확인
-- 잘못된 생일(`0000`, `0230`, `1331`, 3자리 등)이 거부되는지 확인
-- 등록 직후 학생 목록에 생일과 PIN 상태 `설정 필요`가 표시되는지 확인
-- 학생 상세 화면에서 생일을 수정하면 목록/상세에 반영되는지 확인
+- 교사 대시보드에서 학생 이름을 한 줄에 한 명씩 등록할 수 있는지 확인
+- 이미 등록된 학생 이름이나 같은 요청 안의 중복 이름은 거부되는지 확인
+- 등록 직후 학생 목록에 학생 이름이 표시되는지 확인
+- 학생 상세 화면에서 PIN 상태 `설정 필요`가 표시되는지 확인
 - 학생 상세 화면에서 PIN 재설정을 누르면 PIN 상태가 `설정 필요`로 바뀌는지 확인
 - 학생 삭제 시 학생 정보와 감정일기 기록이 함께 삭제되고 목록에서 사라지는지 확인
 
 ### 학생 PIN 로그인/설정
 
-- 최초 학생이 `/`에서 이름+생일+새 PIN 4자리로 PIN을 만들고 감정일기 화면으로 이동하는지 확인
+- 최초 학생이 `/`에서 이름+PIN 4자리로 PIN을 만들고 감정일기 화면으로 이동하는지 확인
 - PIN 설정 후 같은 학생이 이름+PIN만으로 감정일기 화면에 들어가는지 확인
 - 틀린 PIN은 거부되는지 확인
 - PIN이 4자리 숫자가 아니면 설정/로그인이 거부되는지 확인
-- 이미 PIN이 설정된 학생이 생일로 다시 PIN 설정을 시도하면 교사 재설정 안내가 뜨는지 확인
 - 교사가 PIN 재설정 후 기존 PIN 로그인이 실패하는지 확인
-- 교사가 PIN 재설정 후 학생이 이름+생일+새 PIN으로 다시 설정할 수 있는지 확인
-- 같은 이름의 학생이 여러 명일 때 PIN이 정확히 한 명과만 일치하면 로그인되는지 확인
-- 같은 이름+생일 학생이 중복되면 PIN 설정이 막히고 교사 확인 안내가 뜨는지 확인
+- 교사가 PIN 재설정 후 학생이 이름+새 PIN으로 다시 설정할 수 있는지 확인
+- 같은 이름의 학생은 등록되지 않는지 확인
 - 로그인 성공 후 7일 세션 쿠키가 설정되고 `/student/[code]` 새로고침이 유지되는지 확인
 - 세션 없이 `/student/[code]` 직접 접근하면 `/`로 돌아가는지 확인
 
@@ -146,7 +148,7 @@ pnpm db:migrate
 
 ### AI/개인정보
 
-- OpenRouter 요청 payload에 생일, PIN, PIN hash가 포함되지 않는지 확인
+- OpenRouter 요청 payload에 PIN, PIN hash가 포함되지 않는지 확인
 - OpenRouter 응답이 JSON이 아니거나 timeout/오류가 나도 학생에게 로컬 요약이 표시되는지 확인
 - 학생 감정 데이터 페이지와 API 응답에 `cache-control: no-store`가 적용되는지 확인
 - PIN 원문이 DB나 로그에 저장/표시되지 않고 `pin_hash`만 저장되는지 확인
@@ -164,7 +166,7 @@ pnpm db:migrate
 
 ### 학생별 이력
 
-- 학생 상세 화면에서 생일과 PIN 상태가 표시되는지 확인
+- 학생 상세 화면에서 PIN 상태가 표시되는지 확인
 - 날짜별 감정, 강도, SEL 역량이 표시되는지 확인
 - 각 기록의 6단계 답변이 `몸의 신호`, `감정 이름`, `감정 강도`, `장소/대상`, `구체적 사건`, `자기 조절`로 표시되는지 확인
 - 기록이 없는 학생은 빈 상태 안내가 표시되는지 확인

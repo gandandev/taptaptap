@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 import { env } from '$env/dynamic/private'
 
 import { buildLocalEmotionReflection } from '$lib/shared/emotion-reflection'
@@ -5,7 +7,7 @@ import { getEmotionAnswerSelections } from '$lib/shared/emotion-tree'
 import type { EmotionAnswer, EmotionReflection } from '$lib/shared/emotion-types'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const DEFAULT_MODEL = 'openai/gpt-oss-120b'
+const DEFAULT_MODEL = 'openai/gpt-oss-120b:nitro'
 
 function parseReflectionFromContent(
   content: string
@@ -30,7 +32,7 @@ export async function generateEmotionReflection(
   answers: EmotionAnswer[]
 ): Promise<EmotionReflection> {
   const fallback = buildLocalEmotionReflection(answers)
-  const apiKey = env.OPENROUTER_API_KEY
+  const apiKey = env.OPENROUTER_API_KEY?.trim()
 
   if (!apiKey) {
     return fallback
@@ -38,7 +40,7 @@ export async function generateEmotionReflection(
 
   const selections = getEmotionAnswerSelections(answers)
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 8000)
+  const timeout = setTimeout(() => controller.abort(), 20_000)
 
   try {
     const response = await fetch(OPENROUTER_URL, {
@@ -52,7 +54,8 @@ export async function generateEmotionReflection(
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL || DEFAULT_MODEL,
         temperature: 0.4,
-        max_tokens: 220,
+        max_tokens: 500,
+        reasoning: { exclude: true },
         response_format: { type: 'json_object' },
         messages: [
           {

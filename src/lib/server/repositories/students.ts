@@ -1,15 +1,15 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto'
 
 import { getDb } from '$lib/server/db/client'
 import { students } from '$lib/server/db/schema'
 
-function generateStudentCode() {
-  return String(randomInt(0, 100)).padStart(2, '0')
-}
+function getUniqueViolationConstraint(error: unknown) {
+  if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== '23505') {
+    return null
+  }
 
-function isUniqueViolation(error: unknown) {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505'
+  return 'constraint' in error && typeof error.constraint === 'string' ? error.constraint : null
 }
 
 function normalizeStudentName(name: string) {
@@ -52,65 +52,12 @@ export function isValidStudentCodeFormat(code: string) {
   return /^\d{2}$/.test(code)
 }
 
-export function normalizeStudentBirthDate(input: string) {
-  const digits = input.replace(/\D/g, '')
-
-  if (digits.length !== 4) {
-    return null
-  }
-
-  const month = Number(digits.slice(0, 2))
-  const day = Number(digits.slice(2, 4))
-
-  if (!Number.isInteger(month) || !Number.isInteger(day)) {
-    return null
-  }
-
-  if (month < 1 || month > 12 || day < 1 || day > 31) {
-    return null
-  }
-
-  const maxDaysByMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-  if (day > maxDaysByMonth[month - 1]) {
-    return null
-  }
-
-  return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-}
-
-export function formatStudentBirthDate(birthDate: string | null) {
-  if (!birthDate) return null
-
-  const [month, day] = birthDate.split('-')
-  if (!month || !day) return birthDate
-
-  return `${Number(month)}월 ${Number(day)}일`
-}
-
 export async function findStudentByCode(code: string) {
   const db = getDb()
 
   const [student] = await db.select().from(students).where(eq(students.code, code)).limit(1)
 
   return student ?? null
-}
-
-export async function findStudentsByNameAndBirthDate(name: string, birthDate: string) {
-  const db = getDb()
-  const normalizedName = normalizeStudentName(name)
-
-  return db
-    .select()
-    .from(students)
-    .where(
-      and(
-        eq(students.name, normalizedName),
-        eq(students.birthDate, birthDate),
-        eq(students.isActive, true)
-      )
-    )
-    .limit(2)
 }
 
 export async function findActiveStudentsByName(name: string) {
@@ -121,7 +68,23 @@ export async function findActiveStudentsByName(name: string) {
     .select()
     .from(students)
     .where(and(eq(students.name, normalizedName), eq(students.isActive, true)))
-    .limit(50)
+    .limit(2)
+}
+
+export async function findExistingStudentNames(names: string[]) {
+  const db = getDb()
+  const normalizedNames = [...new Set(names.map(normalizeStudentName).filter(Boolean))]
+
+  if (normalizedNames.length === 0) {
+    return []
+  }
+
+  const existingStudents = await db
+    .select({ name: students.name })
+    .from(students)
+    .where(inArray(students.name, normalizedNames))
+
+  return existingStudents.map((student) => student.name)
 }
 
 export async function findStudentById(studentId: string) {
@@ -138,26 +101,6 @@ export async function deleteStudentById(studentId: string) {
   const [deletedStudent] = await db.delete(students).where(eq(students.id, studentId)).returning()
 
   return deletedStudent ?? null
-}
-
-export async function updateStudentBirthDateById(studentId: string, birthDate: string) {
-  const normalizedBirthDate = normalizeStudentBirthDate(birthDate)
-
-  if (!normalizedBirthDate) {
-    throw new Error('Student birth date is invalid')
-  }
-
-  const db = getDb()
-
-  const [student] = await db
-    .update(students)
-    .set({
-      birthDate: normalizedBirthDate
-    })
-    .where(eq(students.id, studentId))
-    .returning()
-
-  return student ?? null
 }
 
 export async function setStudentPinById(studentId: string, pin: string) {
@@ -194,50 +137,105 @@ export async function resetStudentPinById(studentId: string) {
   return student ?? null
 }
 
-export async function createStudentWithAutoCode(
-  {
-    name,
-    birthDate
-  }: {
-    name: string
-    birthDate: string
-  },
-  maxAttempts = 200
-) {
-  const trimmedName = normalizeStudentName(name)
-  const normalizedBirthDate = normalizeStudentBirthDate(birthDate)
+export async function createStudentWithAutoCode({ name }: { name: string }, maxAttempts = 200) {
+  const [student] = await createStudentsWithAutoCodes([name], maxAttempts)
 
-  if (!trimmedName) {
+  if (!student) {
+    throw new Error('Failed to generate a unique student code')
+  }
+
+  return student
+}
+
+function normalizeStudentNames(names: string[]) {
+  const normalizedNames = names.map(normalizeStudentName)
+
+  if (normalizedNames.some((name) => !name)) {
     throw new Error('Student name is required')
   }
 
-  if (trimmedName.length > 40) {
+  if (normalizedNames.some((name) => name.length > 40)) {
     throw new Error('Student name is too long')
   }
 
-  if (!normalizedBirthDate) {
-    throw new Error('Student birth date is invalid')
+  if (new Set(normalizedNames).size !== normalizedNames.length) {
+    throw new Error('Student name already exists')
+  }
+
+  return normalizedNames
+}
+
+function getAvailableStudentCodes(existingCodes: Set<string>) {
+  return Array.from({ length: 100 }, (_, code) => String(code).padStart(2, '0')).filter(
+    (code) => !existingCodes.has(code)
+  )
+}
+
+function pickStudentCodes(count: number, availableCodes: string[]) {
+  const codes = [...availableCodes]
+  const pickedCodes: string[] = []
+
+  for (let index = 0; index < count; index += 1) {
+    const codeIndex = randomInt(0, codes.length)
+    const [code] = codes.splice(codeIndex, 1)
+
+    if (!code) {
+      throw new Error('Failed to generate a unique student code')
+    }
+
+    pickedCodes.push(code)
+  }
+
+  return pickedCodes
+}
+
+export async function createStudentsWithAutoCodes(names: string[], maxAttempts = 20) {
+  const normalizedNames = normalizeStudentNames(names)
+
+  if (normalizedNames.length === 0) {
+    return []
   }
 
   const db = getDb()
+  const existingStudents = await db
+    .select({ name: students.name })
+    .from(students)
+    .where(inArray(students.name, normalizedNames))
+
+  if (existingStudents.length > 0) {
+    throw new Error('Student name already exists')
+  }
+
+  const existingCodes = new Set(
+    (await db.select({ code: students.code }).from(students)).map((student) => student.code)
+  )
+
+  if (existingCodes.size + normalizedNames.length > 100) {
+    throw new Error('Failed to generate a unique student code')
+  }
 
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const code = generateStudentCode()
+    const availableCodes = getAvailableStudentCodes(existingCodes)
+    const codes = pickStudentCodes(normalizedNames.length, availableCodes)
 
     try {
-      const [student] = await db
+      return await db
         .insert(students)
-        .values({
-          name: trimmedName,
-          code,
-          birthDate: normalizedBirthDate
-        })
+        .values(normalizedNames.map((name, index) => ({ name, code: codes[index] })))
         .returning()
-
-      return student
     } catch (error) {
-      if (isUniqueViolation(error)) {
+      const uniqueConstraint = getUniqueViolationConstraint(error)
+
+      if (uniqueConstraint === 'students_code_unique') {
+        for (const code of codes) {
+          existingCodes.add(code)
+        }
+
         continue
+      }
+
+      if (uniqueConstraint === 'students_name_unique') {
+        throw new Error('Student name already exists')
       }
 
       throw error

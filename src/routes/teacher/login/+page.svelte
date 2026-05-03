@@ -15,34 +15,34 @@
   <title>교사 로그인 | 감정일기</title>
 </svelte:head>
 
-<div class="mx-auto flex min-h-screen max-w-xl items-center px-6 py-10">
-  <section class="w-full space-y-6">
+<div class="flex min-h-screen items-center justify-center px-5 py-10">
+  <form method="POST" class="w-full max-w-sm space-y-5" onsubmit={() => (submitting = true)}>
+    <h1 class="text-2xl font-semibold tracking-tight">교사 로그인</h1>
+
     <div class="space-y-2">
-      <p class="text-muted-foreground text-xs font-medium tracking-[0.2em] uppercase">Teacher</p>
-      <h1 class="text-2xl font-semibold tracking-tight">교사 대시보드 로그인</h1>
-      <p class="text-muted-foreground text-sm">환경변수에 설정된 비밀번호로 로그인합니다.</p>
+      <Label for="teacher-password">비밀번호</Label>
+      <Input
+        id="teacher-password"
+        type="password"
+        name="password"
+        class="h-12 rounded-lg bg-white/70"
+        required
+      />
     </div>
 
-    <form method="POST" class="space-y-4" onsubmit={() => (submitting = true)}>
-      <div class="space-y-2">
-        <Label for="teacher-password">비밀번호</Label>
-        <Input id="teacher-password" type="password" name="password" class="h-11" required />
-      </div>
+    {#if form?.message}
+      <Alert variant="destructive">
+        <AlertDescription>{form.message}</AlertDescription>
+      </Alert>
+    {/if}
 
-      {#if form?.message}
-        <Alert variant="destructive">
-          <AlertDescription>{form.message}</AlertDescription>
-        </Alert>
+    <Button type="submit" class="choice-button h-12 w-full rounded-lg" disabled={submitting}>
+      {#if submitting}
+        <LoaderCircle class="size-4 animate-spin" />
+        로그인 중...
+      {:else}
+        로그인
       {/if}
-
-      <Button type="submit" class="h-11 w-full" disabled={submitting}>
-        {#if submitting}
-          <LoaderCircle class="size-4 animate-spin" />
-          로그인 중...
-        {:else}
-          로그인
-        {/if}
-      </Button>
-    </form>
-  </section>
+    </Button>
+  </form>
 </div>

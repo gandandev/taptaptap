@@ -11,7 +11,6 @@
     getEmotionAnswerDisplayPairs,
     getEmotionQuestionGroupLabel
   } from '$lib/shared/emotion-analysis'
-  import { buildLocalEmotionReflection } from '$lib/shared/emotion-reflection'
   import {
     EMOTION_TREE_START_ID,
     getNextQuestionId,
@@ -24,9 +23,7 @@
   let { data }: PageProps = $props()
   const initialSavedAnswers = untrack(() => data.savedEntry?.answers ?? [])
   const hasInitialSavedEntry = untrack(() => Boolean(data.savedEntry))
-  const initialReflection = untrack(() =>
-    initialSavedAnswers.length === 6 ? buildLocalEmotionReflection(initialSavedAnswers) : null
-  )
+  const initialReflection = untrack(() => data.savedReflection ?? null)
 
   let answers: EmotionAnswer[] = $state([])
   let completedAnswers: EmotionAnswer[] = $state(initialSavedAnswers)
@@ -107,7 +104,7 @@
       }
 
       completedAnswers = [...finalAnswers]
-      completedReflection = payload.reflection ?? buildLocalEmotionReflection(finalAnswers)
+      completedReflection = payload.reflection ?? null
       done = true
       successMessage = '오늘 감정일기를 저장했어요.'
     } catch {
@@ -122,15 +119,21 @@
   <title>감정일기 | {data.student.name}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl px-4 py-6 sm:px-6">
-  <section class="space-y-6">
-    <div class="flex flex-wrap items-start justify-between gap-3 border-b pb-5">
+<div class="app-texture min-h-screen px-4 py-6 sm:px-6 lg:py-10">
+  <section class="mx-auto max-w-4xl space-y-6">
+    <div
+      class="soft-panel flex flex-wrap items-start justify-between gap-4 rounded-[1.5rem] p-5 sm:p-6"
+    >
       <div class="space-y-2">
-        <Badge variant="outline">감정일기</Badge>
-        <h1 class="text-2xl font-semibold tracking-tight">{data.student.name}의 감정일기</h1>
+        <Badge variant="secondary">감정일기</Badge>
+        <h1 class="text-3xl font-semibold tracking-tight text-balance">
+          {data.student.name}의 감정일기
+        </h1>
         <p class="text-sm text-muted-foreground">오늘 날짜 (KST): {data.todayDate}</p>
       </div>
-      <Button href="/" variant="outline" size="sm">이름/생일 다시 확인</Button>
+      <Button href="/" variant="outline" size="sm" class="rounded-xl bg-white/60">
+        이름/PIN 다시 확인
+      </Button>
     </div>
 
     {#if successMessage}
@@ -146,16 +149,16 @@
       </Alert>
     {/if}
 
-    <div class="space-y-2">
+    <div class="quiet-panel space-y-3 rounded-[1.25rem] p-4">
       <div class="flex items-center justify-between gap-3 text-sm">
         <span class="font-medium">{done ? '완료' : `${stepNumber}/6단계`}</span>
         <span class="text-muted-foreground"
           >{done ? '오늘 기록 저장됨' : '클릭만으로 작성해요'}</span
         >
       </div>
-      <div class="h-2 overflow-hidden rounded-full bg-muted">
+      <div class="h-3 overflow-hidden rounded-full bg-muted">
         <div
-          class="h-full rounded-full bg-primary transition-all"
+          class="h-full rounded-full bg-primary transition-all duration-300"
           style={`width: ${progressPercent}%`}
         ></div>
       </div>
@@ -164,25 +167,48 @@
     {#if displayedPairs.length > 0}
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {#each displayedPairs as item}
-          <div class="rounded-lg border bg-muted/30 p-3">
-            <p class="text-[11px] tracking-wide text-muted-foreground uppercase">{item.label}</p>
+          <div class="quiet-panel rounded-2xl p-4">
+            <p class="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              {item.label}
+            </p>
             <p class="mt-1 text-sm leading-relaxed font-medium">{item.value}</p>
           </div>
         {/each}
       </div>
     {/if}
 
+    {#if saving && displayedPairs.length >= 6}
+      <div class="grid gap-4 sm:grid-cols-2" aria-label="조언 분석 중">
+        <div class="quiet-panel space-y-3 rounded-2xl p-4">
+          <div class="skeleton-shimmer h-4 w-20 rounded-full"></div>
+          <div class="space-y-2">
+            <div class="skeleton-shimmer h-4 w-full rounded-full"></div>
+            <div class="skeleton-shimmer h-4 w-11/12 rounded-full"></div>
+            <div class="skeleton-shimmer h-4 w-7/12 rounded-full"></div>
+          </div>
+        </div>
+        <div class="quiet-panel space-y-3 rounded-2xl p-4">
+          <div class="skeleton-shimmer h-4 w-20 rounded-full"></div>
+          <div class="space-y-2">
+            <div class="skeleton-shimmer h-4 w-full rounded-full"></div>
+            <div class="skeleton-shimmer h-4 w-10/12 rounded-full"></div>
+            <div class="skeleton-shimmer h-4 w-8/12 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    {/if}
+
     {#if done}
       {#if completedReflection}
-        <div class="grid gap-3 rounded-lg border bg-background p-4 sm:grid-cols-2">
-          <div class="space-y-2">
-            <p class="text-sm font-semibold">일기 요약</p>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="quiet-panel space-y-2 rounded-2xl p-4">
+            <p class="text-sm font-semibold text-primary">일기 요약</p>
             <p class="text-sm leading-relaxed text-muted-foreground">
               {completedReflection.summary}
             </p>
           </div>
-          <div class="space-y-2">
-            <p class="text-sm font-semibold">오늘의 조언</p>
+          <div class="quiet-panel space-y-2 rounded-2xl p-4">
+            <p class="text-sm font-semibold text-primary">오늘의 조언</p>
             <p class="text-sm leading-relaxed text-muted-foreground">
               {completedReflection.advice}
             </p>
@@ -190,24 +216,33 @@
         </div>
       {/if}
 
-      <Button type="button" variant="secondary" onclick={startRewrite}>
+      <Button
+        type="button"
+        variant="secondary"
+        class="choice-button rounded-xl"
+        onclick={startRewrite}
+      >
         <RotateCcw />
         다시 쓰기
       </Button>
     {:else if currentNode}
-      <div class="space-y-4">
+      <div class="soft-panel space-y-6 rounded-[1.5rem] p-5 sm:p-7">
         <div class="space-y-1">
-          <p class="text-sm text-muted-foreground">{getEmotionQuestionGroupLabel(questionId)}</p>
-          <h2 class="text-xl font-semibold tracking-tight">{currentNode.question}</h2>
+          <p class="text-sm font-semibold text-primary">
+            {getEmotionQuestionGroupLabel(questionId)}
+          </p>
+          <h2 class="text-2xl leading-tight font-semibold tracking-tight text-balance">
+            {currentNode.question}
+          </h2>
         </div>
 
-        <div class="grid gap-2 sm:grid-cols-2">
+        <div class="grid gap-3 sm:grid-cols-2">
           {#each currentNode.choices as choice (choice.label)}
             <Button
               type="button"
               variant="outline"
               disabled={saving}
-              class="h-auto min-h-12 justify-start py-3 text-left whitespace-normal"
+              class="choice-button h-auto min-h-14 justify-start rounded-2xl bg-white/70 px-4 py-4 text-left leading-relaxed whitespace-normal hover:bg-secondary"
               onclick={() => pickChoice(questionId, choice.label)}
             >
               {choice.label}

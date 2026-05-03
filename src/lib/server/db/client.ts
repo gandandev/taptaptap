@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 import { env } from '$env/dynamic/private'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
@@ -12,7 +14,7 @@ const globalForDb = globalThis as typeof globalThis & {
 }
 
 function getDatabaseUrl() {
-  const databaseUrl = env.DATABASE_URL
+  const databaseUrl = env.DATABASE_PRIVATE_URL || env.DATABASE_URL
 
   if (!databaseUrl) {
     throw new Error('DATABASE_URL is required')
@@ -31,6 +33,14 @@ function getPositiveInteger(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
+function getBoolean(value: string | undefined, fallback: boolean) {
+  if (!value) {
+    return fallback
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase())
+}
+
 export function getDb(): AppDb {
   if (globalForDb.__taptaptapDb) {
     return globalForDb.__taptaptapDb
@@ -40,10 +50,11 @@ export function getDb(): AppDb {
     globalForDb.__taptaptapPgPool ??
     new Pool({
       connectionString: getDatabaseUrl(),
-      max: getPositiveInteger(env.PG_POOL_MAX, 2),
-      idleTimeoutMillis: getPositiveInteger(env.PG_IDLE_TIMEOUT_MS, 10_000),
-      connectionTimeoutMillis: getPositiveInteger(env.PG_CONNECTION_TIMEOUT_MS, 5_000),
-      allowExitOnIdle: true
+      max: getPositiveInteger(env.PG_POOL_MAX, 5),
+      idleTimeoutMillis: getPositiveInteger(env.PG_IDLE_TIMEOUT_MS, 60_000),
+      connectionTimeoutMillis: getPositiveInteger(env.PG_CONNECTION_TIMEOUT_MS, 3_000),
+      keepAlive: true,
+      allowExitOnIdle: getBoolean(env.PG_ALLOW_EXIT_ON_IDLE, false)
     })
 
   globalForDb.__taptaptapPgPool = pool

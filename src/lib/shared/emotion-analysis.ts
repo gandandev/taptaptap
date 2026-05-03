@@ -47,22 +47,22 @@ export const SEL_COMPETENCIES: Record<SelCompetencyId, SelCompetency> = {
   self: {
     id: 'self',
     label: '자기인식·관리',
-    description: '자신의 감정을 알아차리고 조절하려는 선택'
+    description: '자신의 감정, 신념, 가치관을 이해하고 긍정적인 자기 인식을 기르는 영역'
   },
   communication: {
     id: 'communication',
     label: '소통·협력',
-    description: '타인과 관계를 회복하거나 도움을 요청하는 선택'
+    description: '타인의 말을 경청하고 배려하며 갈등을 예방하고 해결하는 영역'
   },
   responsibility: {
     id: 'responsibility',
     label: '책임',
-    description: '내 행동을 돌아보고 인정하려는 선택'
+    description: '자신이 맡은 일을 성실히 수행하고 규칙을 지키는 태도'
   },
   care: {
     id: 'care',
     label: '마음돌봄',
-    description: '힘든 감정 속에서 나를 보호하는 선택'
+    description: '자신의 감정을 소중히 여기고 힘들 때 스스로 위로하거나 도움을 요청하는 능력'
   }
 }
 

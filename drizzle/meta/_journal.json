@@ -29,6 +29,27 @@
       "when": 1777775009527,
       "tag": "0003_student_pin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777800000000,
+      "tag": "0004_teacher_dashboard_summary",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777800001000,
+      "tag": "0005_students_name_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777799239762,
+      "tag": "0006_green_electro",
+      "breakpoints": true
     }
   ]
 }

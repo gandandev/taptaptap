@@ -105,7 +105,7 @@ export const POST: RequestHandler = async (event) => {
   if (
     !verifyStudentSessionToken(event.cookies.get(STUDENT_SESSION_COOKIE), student.id, student.code)
   ) {
-    return json({ ok: false, error: '이름과 생일을 다시 확인해 주세요.' }, { status: 401 })
+    return json({ ok: false, error: '이름과 PIN을 다시 확인해 주세요.' }, { status: 401 })
   }
 
   const perStudentLimit = checkRateLimit({

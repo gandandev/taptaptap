@@ -1,6 +1,7 @@
 import {
   boolean,
   date,
+  index,
   jsonb,
   pgTable,
   text,
@@ -18,7 +19,6 @@ export const students = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     name: text('name').notNull(),
     code: varchar('code', { length: 2 }).notNull(),
-    birthDate: varchar('birth_date', { length: 5 }),
     pinHash: text('pin_hash'),
     pinResetRequired: boolean('pin_reset_required').notNull().default(true),
     isActive: boolean('is_active').notNull().default(true),
@@ -28,7 +28,11 @@ export const students = pgTable(
       .defaultNow()
       .$onUpdateFn(() => new Date())
   },
-  (table) => [unique('students_code_unique').on(table.code)]
+  (table) => [
+    index('students_active_name_idx').on(table.isActive, table.name),
+    unique('students_code_unique').on(table.code),
+    unique('students_name_unique').on(table.name)
+  ]
 )
 
 export const emotionEntries = pgTable(
@@ -48,10 +52,30 @@ export const emotionEntries = pgTable(
       .defaultNow()
       .$onUpdateFn(() => new Date())
   },
-  (table) => [unique('emotion_entries_student_date_unique').on(table.studentId, table.entryDate)]
+  (table) => [
+    index('emotion_entries_entry_date_student_idx').on(table.entryDate, table.studentId),
+    unique('emotion_entries_student_date_unique').on(table.studentId, table.entryDate)
+  ]
 )
+
+export const teacherDashboardSummaries = pgTable('teacher_dashboard_summaries', {
+  id: text('id').primaryKey(),
+  summaryDate: date('summary_date', { mode: 'string' }).notNull(),
+  signature: text('signature').notNull(),
+  bulletsJson: jsonb('bullets_json').$type<string[]>().notNull(),
+  neededCompetencyId: text('needed_competency_id').notNull(),
+  neededCompetencyLabel: text('needed_competency_label').notNull(),
+  source: text('source').notNull().default('local'),
+  generatedAt: timestamp('generated_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date())
+})
 
 export type StudentRow = typeof students.$inferSelect
 export type NewStudentRow = typeof students.$inferInsert
 export type EmotionEntryRow = typeof emotionEntries.$inferSelect
 export type NewEmotionEntryRow = typeof emotionEntries.$inferInsert
+export type TeacherDashboardSummaryRow = typeof teacherDashboardSummaries.$inferSelect
+export type NewTeacherDashboardSummaryRow = typeof teacherDashboardSummaries.$inferInsert

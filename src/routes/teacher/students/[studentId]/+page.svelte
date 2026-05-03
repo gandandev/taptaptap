@@ -3,8 +3,6 @@
   import { Alert, AlertDescription } from '$lib/components/ui/alert'
   import { Badge, type BadgeVariant } from '$lib/components/ui/badge'
   import { Button } from '$lib/components/ui/button'
-  import { Input } from '$lib/components/ui/input'
-  import { Label } from '$lib/components/ui/label'
   import {
     getEmotionAnswerDisplayPairs,
     getEntryIntensityScore,
@@ -13,16 +11,14 @@
 
   import type { PageProps } from './$types'
 
-  type StudentWithBirthDate = PageProps['data']['student'] & {
-    birthDate: string | null
+  type StudentWithPin = PageProps['data']['student'] & {
     hasPin: boolean
     pinResetRequired: boolean
   }
 
   let { data, form }: PageProps = $props()
-  const studentData = $derived(data.student as StudentWithBirthDate)
+  const studentData = $derived(data.student as StudentWithPin)
   let deletingStudent = $state(false)
-  let savingBirthDate = $state(false)
   let resettingPin = $state(false)
 
   function moodBadgeVariant(mood: string): BadgeVariant {
@@ -35,25 +31,12 @@
 
   function moodBadgeClass(mood: string) {
     if (['기쁨', '설렘'].includes(mood)) {
-      return 'bg-sky-100 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/50 dark:text-sky-200'
+      return 'bg-muted text-foreground hover:bg-muted'
     }
     if (['뿌듯함', '편안함'].includes(mood)) {
-      return 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-200'
+      return 'bg-secondary text-secondary-foreground hover:bg-secondary'
     }
     return ''
-  }
-
-  function formatBirthDate(birthDate: string | null) {
-    if (!birthDate) return '미등록'
-
-    const [month, day] = birthDate.split('-')
-    if (!month || !day) return birthDate
-
-    return `${Number(month)}월 ${Number(day)}일`
-  }
-
-  function birthDateInputValue(birthDate: string | null) {
-    return birthDate?.replace('-', '') ?? ''
   }
 </script>
 
@@ -61,14 +44,15 @@
   <title>{studentData.name} | 학생 감정일기 이력</title>
 </svelte:head>
 
-<div class="space-y-4">
-  <section class="space-y-3 border-b pb-5">
+<div class="space-y-5">
+  <section class="soft-panel space-y-4 rounded-[1.5rem] p-5">
     <div class="flex flex-wrap items-start justify-between gap-2">
       <div class="space-y-2">
-        <Button href="/teacher" variant="outline" size="sm">오늘 목록으로</Button>
-        <h2 class="text-2xl font-semibold tracking-tight">{studentData.name}</h2>
+        <Button href="/teacher" variant="outline" size="sm" class="rounded-xl bg-white/60"
+          >오늘 목록으로</Button
+        >
+        <h2 class="text-3xl font-semibold tracking-tight">{studentData.name}</h2>
         <div class="flex flex-wrap items-center gap-2">
-          <p class="text-sm text-muted-foreground">생일 {formatBirthDate(studentData.birthDate)}</p>
           {#if studentData.pinResetRequired || !studentData.hasPin}
             <Badge variant="outline">PIN 설정 필요</Badge>
           {:else}
@@ -109,39 +93,8 @@
 
     <form
       method="POST"
-      action="?/updateBirthDate"
-      class="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-end"
-      onsubmit={() => (savingBirthDate = true)}
-    >
-      <div class="flex-1 space-y-2">
-        <Label for="student-birth-date">생일</Label>
-        <Input
-          id="student-birth-date"
-          type="text"
-          inputmode="numeric"
-          pattern="[0-9-]*"
-          maxlength={5}
-          name="birthDate"
-          value={birthDateInputValue(studentData.birthDate)}
-          placeholder="예: 05-03"
-          class="h-10"
-          required
-        />
-      </div>
-      <Button type="submit" variant="outline" disabled={savingBirthDate}>
-        {#if savingBirthDate}
-          <LoaderCircle class="size-4 animate-spin" />
-          저장 중...
-        {:else}
-          생일 저장
-        {/if}
-      </Button>
-    </form>
-
-    <form
-      method="POST"
       action="?/resetPin"
-      class="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+      class="quiet-panel flex flex-col gap-2 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between"
       onsubmit={(event) => {
         if (!confirm(`${studentData.name} 학생의 PIN을 재설정할까요?`)) {
           event.preventDefault()
@@ -153,11 +106,14 @@
     >
       <div>
         <p class="text-sm font-medium">PIN 재설정</p>
-        <p class="text-xs text-muted-foreground">
-          기존 PIN은 볼 수 없고, 학생이 새 PIN을 다시 만듭니다.
-        </p>
+        <p class="text-xs text-muted-foreground">기존 PIN은 볼 수 없고, 다시 설정해야 합니다.</p>
       </div>
-      <Button type="submit" variant="outline" disabled={resettingPin}>
+      <Button
+        type="submit"
+        variant="outline"
+        class="rounded-xl bg-white/60"
+        disabled={resettingPin}
+      >
         {#if resettingPin}
           <LoaderCircle class="size-4 animate-spin" />
           재설정 중...
@@ -179,7 +135,7 @@
   {:else}
     {#each data.entries as entry}
       {@const competency = getSelCompetencyForAnswers(entry.answers)}
-      <section class="space-y-4 border-b pb-5 last:border-b-0">
+      <section class="soft-panel space-y-4 rounded-[1.5rem] p-5">
         <div class="flex flex-wrap items-center gap-2">
           <h3 class="text-lg font-semibold tracking-tight">{entry.entryDate}</h3>
           <Badge
@@ -198,8 +154,10 @@
 
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {#each getEmotionAnswerDisplayPairs(entry.answers) as answer}
-            <div class="rounded-lg border bg-muted/40 p-3">
-              <p class="text-[11px] tracking-wide text-muted-foreground uppercase">
+            <div class="quiet-panel rounded-2xl p-4">
+              <p
+                class="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase"
+              >
                 {answer.label}
               </p>
               <p class="mt-1 text-sm leading-relaxed">{answer.value}</p>

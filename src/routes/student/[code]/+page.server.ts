@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit'
 
 import { STUDENT_SESSION_COOKIE, verifyStudentSessionToken } from '$lib/server/auth/student-session'
+import { generateEmotionReflection } from '$lib/server/ai/emotion-reflection'
 import { getEmotionEntryForStudentToday } from '$lib/server/repositories/emotion-entries'
 import { findStudentByCode, isValidStudentCodeFormat } from '$lib/server/repositories/students'
 import { todayDateInKst } from '$lib/server/time'
@@ -25,6 +26,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
   }
 
   const savedEntry = await getEmotionEntryForStudentToday(student.id)
+  const savedReflection = savedEntry ? await generateEmotionReflection(savedEntry.answers) : null
 
   return {
     student: {
@@ -33,6 +35,7 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
       code: student.code
     },
     todayDate: todayDateInKst(),
-    savedEntry
+    savedEntry,
+    savedReflection
   }
 }
