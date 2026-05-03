@@ -5,6 +5,12 @@
     "buildCommand": "pnpm build"
   },
   "deploy": {
+    "region": "asia-southeast1-eqsg3a",
+    "multiRegionConfig": {
+      "asia-southeast1-eqsg3a": {
+        "numReplicas": 1
+      }
+    },
     "startCommand": "node --max-old-space-size=128 build",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 60,
