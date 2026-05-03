@@ -1,4 +1,14 @@
-import { boolean, date, jsonb, pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  date,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  varchar
+} from 'drizzle-orm/pg-core'
 
 import type { EmotionAnswer } from '$lib/shared/emotion-types'
 
@@ -8,6 +18,9 @@ export const students = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     name: text('name').notNull(),
     code: varchar('code', { length: 2 }).notNull(),
+    birthDate: varchar('birth_date', { length: 5 }),
+    pinHash: text('pin_hash'),
+    pinResetRequired: boolean('pin_reset_required').notNull().default(true),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })

@@ -1,5 +1,7 @@
 import { json } from '@sveltejs/kit'
 
+import { STUDENT_SESSION_COOKIE, verifyStudentSessionToken } from '$lib/server/auth/student-session'
+import { generateEmotionReflection } from '$lib/server/ai/emotion-reflection'
 import { upsertEmotionEntryForStudentToday } from '$lib/server/repositories/emotion-entries'
 import { findStudentByCode, isValidStudentCodeFormat } from '$lib/server/repositories/students'
 import { checkRateLimit } from '$lib/server/security/rate-limit'
@@ -36,7 +38,7 @@ function parseEmotionAnswers(value: unknown): EmotionAnswer[] | null {
       return null
     }
 
-    if (item.questionId.length > 64 || item.answer.length > 500) {
+    if (item.questionId.length > 64 || item.answer.length > 120) {
       return null
     }
 
@@ -75,7 +77,10 @@ export const POST: RequestHandler = async (event) => {
 
   if (!perIpLimit.ok) {
     return json(
-      { ok: false, error: `요청이 너무 많아요. ${perIpLimit.retryAfterSec}초 후 다시 시도해 주세요.` },
+      {
+        ok: false,
+        error: `요청이 너무 많아요. ${perIpLimit.retryAfterSec}초 후 다시 시도해 주세요.`
+      },
       {
         status: 429,
         headers: {
@@ -88,13 +93,19 @@ export const POST: RequestHandler = async (event) => {
   const code = params.code.trim()
 
   if (!isValidStudentCodeFormat(code)) {
-    return json({ ok: false, error: '학생 코드가 올바르지 않아요.' }, { status: 400 })
+    return json({ ok: false, error: '학생 접근 정보가 올바르지 않아요.' }, { status: 400 })
   }
 
   const student = await findStudentByCode(code)
 
   if (!student || !student.isActive) {
     return json({ ok: false, error: '학생을 찾을 수 없어요.' }, { status: 404 })
+  }
+
+  if (
+    !verifyStudentSessionToken(event.cookies.get(STUDENT_SESSION_COOKIE), student.id, student.code)
+  ) {
+    return json({ ok: false, error: '이름과 생일을 다시 확인해 주세요.' }, { status: 401 })
   }
 
   const perStudentLimit = checkRateLimit({
@@ -144,11 +155,13 @@ export const POST: RequestHandler = async (event) => {
       studentId: student.id,
       answers
     })
+    const reflection = await generateEmotionReflection(answers)
 
     return json({
       ok: true,
       entryDate: entry.entryDate,
-      updatedAt: entry.updatedAt
+      updatedAt: entry.updatedAt,
+      reflection
     })
   } catch {
     return json({ ok: false, error: '저장 중 오류가 발생했어요.' }, { status: 500 })

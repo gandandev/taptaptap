@@ -21,6 +21,16 @@ function getDatabaseUrl() {
   return databaseUrl
 }
 
+function getPositiveInteger(value: string | undefined, fallback: number) {
+  if (!value) {
+    return fallback
+  }
+
+  const parsed = Number.parseInt(value, 10)
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
 export function getDb(): AppDb {
   if (globalForDb.__taptaptapDb) {
     return globalForDb.__taptaptapDb
@@ -29,7 +39,11 @@ export function getDb(): AppDb {
   const pool =
     globalForDb.__taptaptapPgPool ??
     new Pool({
-      connectionString: getDatabaseUrl()
+      connectionString: getDatabaseUrl(),
+      max: getPositiveInteger(env.PG_POOL_MAX, 2),
+      idleTimeoutMillis: getPositiveInteger(env.PG_IDLE_TIMEOUT_MS, 10_000),
+      connectionTimeoutMillis: getPositiveInteger(env.PG_CONNECTION_TIMEOUT_MS, 5_000),
+      allowExitOnIdle: true
     })
 
   globalForDb.__taptaptapPgPool = pool

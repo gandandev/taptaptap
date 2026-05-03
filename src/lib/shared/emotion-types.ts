@@ -22,6 +22,12 @@ export type EmotionEntryPayload = {
   answers: EmotionAnswer[]
 }
 
+export type EmotionReflection = {
+  summary: string
+  advice: string
+  source: 'ai' | 'local'
+}
+
 export type EmotionEntryRecord = {
   id: string
   studentId: string
@@ -37,8 +43,18 @@ export type TeacherStudentSummary = {
   studentId: string
   name: string
   code: string
+  birthDate: string | null
+  hasPin: boolean
+  pinResetRequired: boolean
   hasSubmittedToday: boolean
+  answers: EmotionAnswer[] | null
   moodPrimary: string | null
   badReasonSummary: string | null
   submittedAt: Date | null
+}
+
+export type TeacherClassEntry = EmotionEntryRecord & {
+  studentName: string
+  studentCode: string
+  studentBirthDate: string | null
 }

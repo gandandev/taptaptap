@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@hugeicons/core-free-icons':
-        specifier: ^3.1.1
-        version: 3.1.1
-      '@hugeicons/svelte':
-        specifier: ^1.1.1
-        version: 1.1.1(svelte@5.50.0)
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@types/pg@8.16.0)(pg@8.18.0)
@@ -628,14 +622,6 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
-
-  '@hugeicons/core-free-icons@3.1.1':
-    resolution: {integrity: sha512-UpS2lUQFi5sKyJSWwM6rO+BnPLvVz1gsyCpPHeZyVuZqi89YH8ksliza4cwaODqKOZyeXmG8juo1ty4QtQofkg==}
-
-  '@hugeicons/svelte@1.1.1':
-    resolution: {integrity: sha512-Afe86i+D/+zq8cGTWdbwXT49bI5marsN0QgKbpQ+pR07Yi21NIQyvn6ogvmT4LLnH6PAj46HaktaA4C6mq8Emg==}
-    peerDependencies:
-      svelte: ^5.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2374,12 +2360,6 @@ snapshots:
       '@floating-ui/utils': 0.2.10
 
   '@floating-ui/utils@0.2.10': {}
-
-  '@hugeicons/core-free-icons@3.1.1': {}
-
-  '@hugeicons/svelte@1.1.1(svelte@5.50.0)':
-    dependencies:
-      svelte: 5.50.0
 
   '@humanfs/core@0.19.1': {}
 

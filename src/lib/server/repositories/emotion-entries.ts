@@ -1,10 +1,15 @@
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, gte } from 'drizzle-orm'
 
 import { getDb } from '$lib/server/db/client'
 import { emotionEntries, students } from '$lib/server/db/schema'
 import { todayDateInKst } from '$lib/server/time'
 import { deriveEmotionEntryMetadata } from '$lib/shared/emotion-tree'
-import type { EmotionAnswer, EmotionEntryRecord, TeacherStudentSummary } from '$lib/shared/emotion-types'
+import type {
+  EmotionAnswer,
+  EmotionEntryRecord,
+  TeacherClassEntry,
+  TeacherStudentSummary
+} from '$lib/shared/emotion-types'
 
 function mapEmotionEntryRecord(row: typeof emotionEntries.$inferSelect): EmotionEntryRecord {
   return {
@@ -88,7 +93,9 @@ export async function upsertEmotionEntryForStudentToday({
   })
 }
 
-export async function listTeacherStudentSummariesForDate(entryDate: string): Promise<TeacherStudentSummary[]> {
+export async function listTeacherStudentSummariesForDate(
+  entryDate: string
+): Promise<TeacherStudentSummary[]> {
   const db = getDb()
 
   const rows = await db
@@ -96,7 +103,11 @@ export async function listTeacherStudentSummariesForDate(entryDate: string): Pro
       studentId: students.id,
       name: students.name,
       code: students.code,
+      birthDate: students.birthDate,
+      pinHash: students.pinHash,
+      pinResetRequired: students.pinResetRequired,
       entryId: emotionEntries.id,
+      answers: emotionEntries.answersJson,
       moodPrimary: emotionEntries.moodPrimary,
       badReasonSummary: emotionEntries.badReasonSummary,
       submittedAt: emotionEntries.submittedAt
@@ -113,10 +124,53 @@ export async function listTeacherStudentSummariesForDate(entryDate: string): Pro
     studentId: row.studentId,
     name: row.name,
     code: row.code,
+    birthDate: row.birthDate,
+    hasPin: row.pinHash !== null,
+    pinResetRequired: row.pinResetRequired,
     hasSubmittedToday: row.entryId !== null,
+    answers: row.answers,
     moodPrimary: row.moodPrimary,
     badReasonSummary: row.badReasonSummary,
     submittedAt: row.submittedAt
+  }))
+}
+
+export async function listClassEmotionEntriesSince(
+  entryDate: string
+): Promise<TeacherClassEntry[]> {
+  const db = getDb()
+
+  const rows = await db
+    .select({
+      id: emotionEntries.id,
+      studentId: emotionEntries.studentId,
+      studentName: students.name,
+      studentCode: students.code,
+      studentBirthDate: students.birthDate,
+      entryDate: emotionEntries.entryDate,
+      answersJson: emotionEntries.answersJson,
+      moodPrimary: emotionEntries.moodPrimary,
+      badReasonSummary: emotionEntries.badReasonSummary,
+      submittedAt: emotionEntries.submittedAt,
+      updatedAt: emotionEntries.updatedAt
+    })
+    .from(emotionEntries)
+    .innerJoin(students, eq(students.id, emotionEntries.studentId))
+    .where(and(eq(students.isActive, true), gte(emotionEntries.entryDate, entryDate)))
+    .orderBy(desc(emotionEntries.entryDate), asc(students.name))
+
+  return rows.map((row) => ({
+    id: row.id,
+    studentId: row.studentId,
+    studentName: row.studentName,
+    studentCode: row.studentCode,
+    studentBirthDate: row.studentBirthDate,
+    entryDate: row.entryDate,
+    answers: row.answersJson,
+    moodPrimary: row.moodPrimary,
+    badReasonSummary: row.badReasonSummary,
+    submittedAt: row.submittedAt,
+    updatedAt: row.updatedAt
   }))
 }
 
