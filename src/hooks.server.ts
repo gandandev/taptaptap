@@ -10,7 +10,11 @@ export const handle: Handle = async ({ event, resolve }) => {
   response.headers.set('cross-origin-opener-policy', 'same-origin')
   response.headers.set('cross-origin-resource-policy', 'same-origin')
 
-  if (event.url.pathname.startsWith('/teacher') || event.url.pathname.startsWith('/student/')) {
+  if (
+    event.url.pathname.startsWith('/teacher') ||
+    event.url.pathname.startsWith('/student/') ||
+    event.url.pathname.startsWith('/api/student/')
+  ) {
     response.headers.set('cache-control', 'no-store')
   }
 

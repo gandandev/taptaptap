@@ -46,6 +46,9 @@ export const emotionEntries = pgTable(
     answersJson: jsonb('answers_json').$type<EmotionAnswer[]>().notNull(),
     moodPrimary: text('mood_primary').notNull(),
     badReasonSummary: text('bad_reason_summary'),
+    reflectionSummary: text('reflection_summary'),
+    reflectionAdvice: text('reflection_advice'),
+    reflectionSource: text('reflection_source'),
     submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
       .notNull()

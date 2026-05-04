@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit'
 
+import { TEACHER_SESSION_COOKIE, verifyTeacherSessionToken } from '$lib/server/auth/teacher-session'
 import { listEmotionEntriesForStudent } from '$lib/server/repositories/emotion-entries'
 import {
   deleteStudentById,
@@ -34,6 +35,10 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
   resetPin: async (event) => {
+    if (!verifyTeacherSessionToken(event.cookies.get(TEACHER_SESSION_COOKIE))) {
+      throw redirect(303, '/teacher/login')
+    }
+
     if (!isSameOriginMutationRequest(event)) {
       return fail(403, {
         message: '허용되지 않은 요청이에요.'
@@ -76,6 +81,10 @@ export const actions: Actions = {
   },
 
   delete: async (event) => {
+    if (!verifyTeacherSessionToken(event.cookies.get(TEACHER_SESSION_COOKIE))) {
+      throw redirect(303, '/teacher/login')
+    }
+
     if (!isSameOriginMutationRequest(event)) {
       return fail(403, {
         message: '허용되지 않은 요청이에요.'

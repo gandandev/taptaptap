@@ -1,10 +1,10 @@
 import { redirect } from '@sveltejs/kit'
 
 import { STUDENT_SESSION_COOKIE, verifyStudentSessionToken } from '$lib/server/auth/student-session'
-import { generateEmotionReflection } from '$lib/server/ai/emotion-reflection'
 import { getEmotionEntryForStudentToday } from '$lib/server/repositories/emotion-entries'
 import { findStudentByCode, isValidStudentCodeFormat } from '$lib/server/repositories/students'
 import { todayDateInKst } from '$lib/server/time'
+import { buildLocalEmotionReflection } from '$lib/shared/emotion-reflection'
 
 import type { PageServerLoad } from './$types'
 
@@ -26,7 +26,16 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
   }
 
   const savedEntry = await getEmotionEntryForStudentToday(student.id)
-  const savedReflection = savedEntry ? await generateEmotionReflection(savedEntry.answers) : null
+  const savedReflection =
+    savedEntry?.reflectionSummary && savedEntry.reflectionAdvice
+      ? {
+          summary: savedEntry.reflectionSummary,
+          advice: savedEntry.reflectionAdvice,
+          source: savedEntry.reflectionSource ?? 'local'
+        }
+      : savedEntry
+        ? buildLocalEmotionReflection(savedEntry.answers)
+        : null
 
   return {
     student: {

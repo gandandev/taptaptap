@@ -35,6 +35,9 @@ export type EmotionEntryRecord = {
   answers: EmotionAnswer[]
   moodPrimary: string
   badReasonSummary: string | null
+  reflectionSummary: string | null
+  reflectionAdvice: string | null
+  reflectionSource: EmotionReflection['source'] | null
   submittedAt: Date
   updatedAt: Date
 }
@@ -49,6 +52,9 @@ export type TeacherStudentSummary = {
   answers: EmotionAnswer[] | null
   moodPrimary: string | null
   badReasonSummary: string | null
+  reflectionSummary: string | null
+  reflectionAdvice: string | null
+  reflectionSource: EmotionReflection['source'] | null
   submittedAt: Date | null
 }
 

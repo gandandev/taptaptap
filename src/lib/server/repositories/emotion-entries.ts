@@ -7,9 +7,18 @@ import { deriveEmotionEntryMetadata } from '$lib/shared/emotion-tree'
 import type {
   EmotionAnswer,
   EmotionEntryRecord,
+  EmotionReflection,
   TeacherClassEntry,
   TeacherStudentSummary
 } from '$lib/shared/emotion-types'
+
+function parseReflectionSource(source: string | null): EmotionReflection['source'] | null {
+  if (source === 'ai' || source === 'local') {
+    return source
+  }
+
+  return null
+}
 
 function mapEmotionEntryRecord(row: typeof emotionEntries.$inferSelect): EmotionEntryRecord {
   return {
@@ -19,6 +28,9 @@ function mapEmotionEntryRecord(row: typeof emotionEntries.$inferSelect): Emotion
     answers: row.answersJson,
     moodPrimary: row.moodPrimary,
     badReasonSummary: row.badReasonSummary,
+    reflectionSummary: row.reflectionSummary,
+    reflectionAdvice: row.reflectionAdvice,
+    reflectionSource: parseReflectionSource(row.reflectionSource),
     submittedAt: row.submittedAt,
     updatedAt: row.updatedAt
   }
@@ -79,6 +91,26 @@ export async function upsertEmotionEntryForStudentDate({
   return mapEmotionEntryRecord(entry)
 }
 
+export async function updateEmotionEntryReflection({
+  entryId,
+  reflection
+}: {
+  entryId: string
+  reflection: EmotionReflection
+}) {
+  const db = getDb()
+
+  await db
+    .update(emotionEntries)
+    .set({
+      reflectionSummary: reflection.summary,
+      reflectionAdvice: reflection.advice,
+      reflectionSource: reflection.source,
+      updatedAt: new Date()
+    })
+    .where(eq(emotionEntries.id, entryId))
+}
+
 export async function upsertEmotionEntryForStudentToday({
   studentId,
   answers
@@ -109,6 +141,9 @@ export async function listTeacherStudentSummariesForDate(
       answers: emotionEntries.answersJson,
       moodPrimary: emotionEntries.moodPrimary,
       badReasonSummary: emotionEntries.badReasonSummary,
+      reflectionSummary: emotionEntries.reflectionSummary,
+      reflectionAdvice: emotionEntries.reflectionAdvice,
+      reflectionSource: emotionEntries.reflectionSource,
       submittedAt: emotionEntries.submittedAt
     })
     .from(students)
@@ -129,6 +164,9 @@ export async function listTeacherStudentSummariesForDate(
     answers: row.answers,
     moodPrimary: row.moodPrimary,
     badReasonSummary: row.badReasonSummary,
+    reflectionSummary: row.reflectionSummary,
+    reflectionAdvice: row.reflectionAdvice,
+    reflectionSource: parseReflectionSource(row.reflectionSource),
     submittedAt: row.submittedAt
   }))
 }
@@ -148,6 +186,9 @@ export async function listClassEmotionEntriesSince(
       answersJson: emotionEntries.answersJson,
       moodPrimary: emotionEntries.moodPrimary,
       badReasonSummary: emotionEntries.badReasonSummary,
+      reflectionSummary: emotionEntries.reflectionSummary,
+      reflectionAdvice: emotionEntries.reflectionAdvice,
+      reflectionSource: emotionEntries.reflectionSource,
       submittedAt: emotionEntries.submittedAt,
       updatedAt: emotionEntries.updatedAt
     })
@@ -165,6 +206,9 @@ export async function listClassEmotionEntriesSince(
     answers: row.answersJson,
     moodPrimary: row.moodPrimary,
     badReasonSummary: row.badReasonSummary,
+    reflectionSummary: row.reflectionSummary,
+    reflectionAdvice: row.reflectionAdvice,
+    reflectionSource: parseReflectionSource(row.reflectionSource),
     submittedAt: row.submittedAt,
     updatedAt: row.updatedAt
   }))

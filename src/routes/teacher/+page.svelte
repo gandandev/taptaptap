@@ -12,6 +12,7 @@
     TableHeader,
     TableRow
   } from '$lib/components/ui/table'
+  import { buildLocalEmotionReflection } from '$lib/shared/emotion-reflection'
   import type { SelTrend, StudentDashboardSummary } from '$lib/shared/emotion-analysis'
 
   import type { PageProps } from './$types'
@@ -67,6 +68,13 @@
     return (
       selSegmentColors[trend.competency.id as keyof typeof selSegmentColors] ?? 'oklch(0.48 0 0)'
     )
+  }
+
+  function getStudentReflectionSummary(student: StudentDashboardSummary) {
+    if (!student.hasSubmittedToday) return '-'
+    if (student.reflectionSummary) return student.reflectionSummary
+
+    return student.answers ? buildLocalEmotionReflection(student.answers).summary : '-'
   }
 </script>
 
@@ -292,13 +300,13 @@
         <p class="py-8 text-center text-sm text-muted-foreground">등록된 학생이 없어요.</p>
       {:else}
         <div class="overflow-hidden rounded-lg border bg-background">
-          <Table>
+          <Table class="table-fixed">
             <TableHeader>
               <TableRow class="bg-muted/40 hover:[&,&>svelte-css-wrapper]:[&>th,td]:bg-muted/40">
-                <TableHead class="w-[26%] px-4">학생</TableHead>
-                <TableHead class="px-4">오늘 제출</TableHead>
-                <TableHead class="px-4">주요 감정</TableHead>
-                <TableHead class="px-4 text-right">관리</TableHead>
+                <TableHead class="w-[24%] px-4">학생</TableHead>
+                <TableHead class="w-[7rem] px-4">오늘 제출</TableHead>
+                <TableHead class="px-4">일기 요약</TableHead>
+                <TableHead class="w-[10rem] px-4 text-right">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -323,8 +331,10 @@
                       {student.hasSubmittedToday ? '제출함' : '미제출'}
                     </Badge>
                   </TableCell>
-                  <TableCell class="px-4 py-3 text-muted-foreground">
-                    {student.moodPrimary ?? '-'}
+                  <TableCell class="min-w-0 px-4 py-3 whitespace-normal text-muted-foreground">
+                    <p class="line-clamp-2 min-w-0 overflow-hidden leading-relaxed break-words">
+                      {getStudentReflectionSummary(student)}
+                    </p>
                   </TableCell>
                   <TableCell class="px-4 py-3">
                     <form

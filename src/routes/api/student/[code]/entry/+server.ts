@@ -2,7 +2,10 @@ import { json } from '@sveltejs/kit'
 
 import { STUDENT_SESSION_COOKIE, verifyStudentSessionToken } from '$lib/server/auth/student-session'
 import { generateEmotionReflection } from '$lib/server/ai/emotion-reflection'
-import { upsertEmotionEntryForStudentToday } from '$lib/server/repositories/emotion-entries'
+import {
+  updateEmotionEntryReflection,
+  upsertEmotionEntryForStudentToday
+} from '$lib/server/repositories/emotion-entries'
 import { findStudentByCode, isValidStudentCodeFormat } from '$lib/server/repositories/students'
 import { checkRateLimit } from '$lib/server/security/rate-limit'
 import {
@@ -156,6 +159,7 @@ export const POST: RequestHandler = async (event) => {
       answers
     })
     const reflection = await generateEmotionReflection(answers)
+    await updateEmotionEntryReflection({ entryId: entry.id, reflection })
 
     return json({
       ok: true,

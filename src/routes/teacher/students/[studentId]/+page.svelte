@@ -8,6 +8,7 @@
     getEntryIntensityScore,
     getSelCompetencyForAnswers
   } from '$lib/shared/emotion-analysis'
+  import { buildLocalEmotionReflection } from '$lib/shared/emotion-reflection'
 
   import type { PageProps } from './$types'
 
@@ -37,6 +38,14 @@
       return 'bg-secondary text-secondary-foreground hover:bg-secondary'
     }
     return ''
+  }
+
+  function getEntryReflectionSummary(entry: PageProps['data']['entries'][number]) {
+    return entry.reflectionSummary ?? buildLocalEmotionReflection(entry.answers).summary
+  }
+
+  function getEntryReflectionSourceLabel(entry: PageProps['data']['entries'][number]) {
+    return entry.reflectionSummary && entry.reflectionSource === 'ai' ? 'AI 요약' : '로컬 요약'
   }
 </script>
 
@@ -163,6 +172,21 @@
               <p class="mt-1 text-sm leading-relaxed">{answer.value}</p>
             </div>
           {/each}
+          <div class="quiet-panel rounded-2xl p-4 sm:col-span-2 lg:col-span-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <p
+                class="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase"
+              >
+                일기 요약
+              </p>
+              <Badge variant={entry.reflectionSource === 'ai' ? 'secondary' : 'outline'}>
+                {getEntryReflectionSourceLabel(entry)}
+              </Badge>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed break-words text-muted-foreground">
+              {getEntryReflectionSummary(entry)}
+            </p>
+          </div>
         </div>
       </section>
     {/each}
