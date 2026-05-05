@@ -181,15 +181,40 @@ export const load: PageServerLoad = async ({ url }) => {
     }
 
     const fallbackNeededCompetency = getMostNeededCompetency(recentEntries, riskAlerts)
+    let storedAiSummary = cachedAiSummary
+    let aiSummaryError: string | null = null
 
-    const aiSummary = cachedAiSummary
+    if (!storedAiSummary) {
+      try {
+        storedAiSummary = await persistTeacherDashboardSummary({
+          todayDate: selectedDate,
+          signature: buildTeacherDashboardSignature({ todayDate: selectedDate, students }),
+          summary: await generateTeacherDashboardSummary({
+            todayDate: selectedDate,
+            todayStudents: students,
+            recentEntries,
+            riskAlerts,
+            selTrends
+          }),
+          canPersist: true
+        })
+      } catch (error) {
+        aiSummaryError = getAiSummaryGenerationErrorMessage(error)
+
+        if (!aiSummaryError) {
+          throw error
+        }
+      }
+    }
+
+    const aiSummary = storedAiSummary
       ? {
-          bullets: cachedAiSummary.bullets,
+          bullets: storedAiSummary.bullets,
           neededCompetency:
-            SEL_COMPETENCIES[cachedAiSummary.neededCompetencyId as keyof typeof SEL_COMPETENCIES] ??
+            SEL_COMPETENCIES[storedAiSummary.neededCompetencyId as keyof typeof SEL_COMPETENCIES] ??
             fallbackNeededCompetency,
-          source: cachedAiSummary.source,
-          generatedAt: cachedAiSummary.generatedAt
+          source: storedAiSummary.source,
+          generatedAt: storedAiSummary.generatedAt
         }
       : null
 
@@ -202,7 +227,7 @@ export const load: PageServerLoad = async ({ url }) => {
       aiSummary,
       emotionTrends: summarizeEmotionTrends(recentEntries).slice(0, 6),
       selTrends,
-      dashboardError: null
+      dashboardError: aiSummaryError
     }
   } catch (error) {
     console.error('Failed to load teacher dashboard', error)
