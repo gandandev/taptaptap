@@ -125,22 +125,43 @@ function getAiSummaryGenerationErrorMessage(error: unknown) {
   return null
 }
 
-export const load: PageServerLoad = async () => {
+const dashboardDatePattern = /^\d{4}-\d{2}-\d{2}$/
+
+function isValidDashboardDate(date: string) {
+  if (!dashboardDatePattern.test(date)) return false
+
+  const parsedDate = new Date(`${date}T00:00:00.000Z`)
+
+  return !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().slice(0, 10) === date
+}
+
+function getSelectedDashboardDate(dateParam: string | null, todayDate: string) {
+  if (!dateParam) return todayDate
+  if (!isValidDashboardDate(dateParam)) return todayDate
+  if (dateParam > todayDate) return todayDate
+
+  return dateParam
+}
+
+export const load: PageServerLoad = async ({ url }) => {
   const todayDate = todayDateInKst()
-  const recentStartDate = getRecentDateStrings(todayDate, 30).at(-1) ?? todayDate
+  const selectedDate = getSelectedDashboardDate(url.searchParams.get('date'), todayDate)
+  const recentStartDate = getRecentDateStrings(selectedDate, 30).at(-1) ?? selectedDate
 
   try {
     const [students, recentEntries] = await Promise.all([
-      listTeacherStudentSummariesForDate(todayDate),
+      listTeacherStudentSummariesForDate(selectedDate),
       listClassEmotionEntriesSince(recentStartDate)
     ])
-    const riskAlerts = findThreeDayRiskAlerts(recentEntries, todayDate)
+    const riskAlerts = findThreeDayRiskAlerts(recentEntries, selectedDate)
     const selTrends = summarizeSelTrends(recentEntries)
     const submittedTodayCount = students.filter((student) => student.hasSubmittedToday).length
 
     if (submittedTodayCount === 0) {
       return {
         todayDate,
+        selectedDate,
+        recentStartDate,
         students: enrichStudentSummaries(students),
         submittedTodayCount,
         aiSummary: null,
@@ -150,11 +171,11 @@ export const load: PageServerLoad = async () => {
       }
     }
 
-    const summarySignature = buildTeacherDashboardSignature({ todayDate, students })
+    const summarySignature = buildTeacherDashboardSignature({ todayDate: selectedDate, students })
     let cachedAiSummary: StoredTeacherDashboardSummary | null = null
 
     try {
-      cachedAiSummary = await getTeacherDashboardSummary()
+      cachedAiSummary = await getTeacherDashboardSummary(selectedDate)
     } catch (error) {
       if (!isTeacherDashboardSummaryStorageMissing(error)) {
         throw error
@@ -172,10 +193,10 @@ export const load: PageServerLoad = async () => {
     if (!storedAiSummary) {
       try {
         storedAiSummary = await persistTeacherDashboardSummary({
-          todayDate,
+          todayDate: selectedDate,
           signature: summarySignature,
           summary: await generateTeacherDashboardSummary({
-            todayDate,
+            todayDate: selectedDate,
             todayStudents: students,
             recentEntries,
             riskAlerts,
@@ -205,6 +226,8 @@ export const load: PageServerLoad = async () => {
 
     return {
       todayDate,
+      selectedDate,
+      recentStartDate,
       students: enrichStudentSummaries(students),
       submittedTodayCount,
       aiSummary,
@@ -217,6 +240,8 @@ export const load: PageServerLoad = async () => {
 
     return {
       todayDate,
+      selectedDate,
+      recentStartDate,
       students: [],
       submittedTodayCount: 0,
       aiSummary: null,
@@ -359,25 +384,27 @@ export const actions: Actions = {
     }
 
     const todayDate = todayDateInKst()
-    const recentStartDate = getRecentDateStrings(todayDate, 30).at(-1) ?? todayDate
+    const formData = await event.request.formData()
+    const selectedDate = getSelectedDashboardDate(String(formData.get('date') ?? ''), todayDate)
+    const recentStartDate = getRecentDateStrings(selectedDate, 30).at(-1) ?? selectedDate
 
     try {
-      const students = await listTeacherStudentSummariesForDate(todayDate)
+      const students = await listTeacherStudentSummariesForDate(selectedDate)
       const submittedTodayCount = students.filter((student) => student.hasSubmittedToday).length
 
       if (submittedTodayCount === 0) {
         return {
           action: 'regenerateSummary',
-          message: '오늘 제출한 학생이 없어 요약을 생성하지 않았어요.'
+          message: '선택한 날짜에 제출한 학생이 없어 요약을 생성하지 않았어요.'
         }
       }
 
       const recentEntries = await listClassEmotionEntriesSince(recentStartDate)
-      const riskAlerts = findThreeDayRiskAlerts(recentEntries, todayDate)
+      const riskAlerts = findThreeDayRiskAlerts(recentEntries, selectedDate)
       const selTrends = summarizeSelTrends(recentEntries)
-      const summarySignature = buildTeacherDashboardSignature({ todayDate, students })
+      const summarySignature = buildTeacherDashboardSignature({ todayDate: selectedDate, students })
       const summary = await generateTeacherDashboardSummary({
-        todayDate,
+        todayDate: selectedDate,
         todayStudents: students,
         recentEntries,
         riskAlerts,
@@ -385,7 +412,7 @@ export const actions: Actions = {
       })
 
       await persistTeacherDashboardSummary({
-        todayDate,
+        todayDate: selectedDate,
         signature: summarySignature,
         summary,
         canPersist: true

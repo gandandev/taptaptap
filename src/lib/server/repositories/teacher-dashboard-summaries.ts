@@ -39,13 +39,17 @@ function mapStoredTeacherDashboardSummary(
   }
 }
 
-export async function getTeacherDashboardSummary() {
+function getTeacherDashboardSummaryId(summaryDate: string) {
+  return `${TEACHER_DASHBOARD_SUMMARY_ID}:${summaryDate}`
+}
+
+export async function getTeacherDashboardSummary(summaryDate: string) {
   const db = getDb()
 
   const [summary] = await db
     .select()
     .from(teacherDashboardSummaries)
-    .where(eq(teacherDashboardSummaries.id, TEACHER_DASHBOARD_SUMMARY_ID))
+    .where(eq(teacherDashboardSummaries.id, getTeacherDashboardSummaryId(summaryDate)))
     .limit(1)
 
   return summary ? mapStoredTeacherDashboardSummary(summary) : null
@@ -72,7 +76,7 @@ export async function upsertTeacherDashboardSummary({
   const [summary] = await db
     .insert(teacherDashboardSummaries)
     .values({
-      id: TEACHER_DASHBOARD_SUMMARY_ID,
+      id: getTeacherDashboardSummaryId(summaryDate),
       summaryDate,
       signature,
       bulletsJson: bullets,

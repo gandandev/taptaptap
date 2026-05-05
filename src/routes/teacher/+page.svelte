@@ -1,9 +1,12 @@
 <script lang="ts">
   import { enhance } from '$app/forms'
+  import ChevronLeft from '@lucide/svelte/icons/chevron-left'
+  import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
   import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert'
   import { Badge } from '$lib/components/ui/badge'
   import { Button } from '$lib/components/ui/button'
+  import { DatePicker } from '$lib/components/ui/date-picker'
   import {
     Table,
     TableBody,
@@ -18,6 +21,9 @@
   import type { PageProps } from './$types'
 
   type TeacherDashboardData = PageProps['data'] & {
+    selectedDate: string
+    todayDate: string
+    recentStartDate: string
     students: StudentDashboardSummary[]
     selTrends: SelTrend[]
     submittedTodayCount: number
@@ -41,6 +47,11 @@
   let { data, form }: PageProps = $props()
   const dashboardData = $derived(data as TeacherDashboardData)
   const actionResult = $derived((form as TeacherDashboardForm) ?? null)
+  const isSelectedDateToday = $derived(dashboardData.selectedDate === dashboardData.todayDate)
+  const selectedDateLabel = $derived(formatDateLabel(dashboardData.selectedDate))
+  const trendDateRangeLabel = $derived(
+    `${formatShortDate(dashboardData.recentStartDate)}-${formatShortDate(dashboardData.selectedDate)}`
+  )
   const selTrendTotal = $derived(
     dashboardData.selTrends.reduce((total, trend) => total + trend.count, 0)
   )
@@ -57,6 +68,11 @@
   let addingStudents = $state(false)
   let regeneratingSummary = $state(false)
   let showAddStudents = $state(false)
+  const addStudentsPlaceholder = `줄바꿈을 기준으로 여러 학생을 추가하세요.  예시:
+
+김민지
+박서준
+이하율`
 
   function selPercent(count: number) {
     if (selTrendTotal === 0) return 0
@@ -76,13 +92,48 @@
 
     return student.answers ? buildLocalEmotionReflection(student.answers).summary : '-'
   }
+
+  function parseDate(date: string) {
+    const [year, month, day] = date.split('-').map(Number)
+
+    return new Date(Date.UTC(year, month - 1, day))
+  }
+
+  function addDays(date: string, days: number) {
+    const [year, month, day] = date.split('-').map(Number)
+    const parsedDate = new Date(Date.UTC(year, month - 1, day + days))
+
+    return parsedDate.toISOString().slice(0, 10)
+  }
+
+  function formatDateLabel(date: string) {
+    const parsedDate = parseDate(date)
+
+    return new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
+      timeZone: 'UTC'
+    }).format(parsedDate)
+  }
+
+  function formatShortDate(date: string) {
+    const [, month, day] = date.split('-')
+
+    return `${Number(month)}.${Number(day)}`
+  }
+
+  function navigateToDashboardDate(date: string) {
+    window.location.href = date === dashboardData.todayDate ? '/teacher' : `/teacher?date=${date}`
+  }
 </script>
 
 <svelte:head>
   <title>교사 대시보드 | 감정일기</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl">
+<div class="mx-auto max-w-5xl">
   <section class="space-y-8">
     {#if dashboardData.dashboardError}
       <Alert class="border-yellow-200 bg-yellow-50 text-yellow-950">
@@ -96,6 +147,58 @@
         <AlertDescription class="text-yellow-900">{actionResult.message}</AlertDescription>
       </Alert>
     {/if}
+
+    <section class="flex flex-col gap-4 border-b pb-6">
+      <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div class="flex flex-col gap-1">
+          <h1 class="text-2xl font-semibold tracking-tight">감정일기 교사 대시보드</h1>
+          <p class="text-sm text-muted-foreground">
+            {selectedDateLabel} 기준 제출 현황과 최근 30일 흐름
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <div class="grid grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 sm:flex">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              class="size-10 rounded-xl bg-transparent"
+              aria-label="이전 날짜"
+              onclick={() => navigateToDashboardDate(addDays(dashboardData.selectedDate, -1))}
+            >
+              <ChevronLeft class="size-4" />
+            </Button>
+            <DatePicker
+              value={dashboardData.selectedDate}
+              max={dashboardData.todayDate}
+              class="min-w-0"
+              onSelect={navigateToDashboardDate}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              class="size-10 rounded-xl bg-transparent"
+              disabled={isSelectedDateToday}
+              aria-label="다음 날짜"
+              onclick={() => navigateToDashboardDate(addDays(dashboardData.selectedDate, 1))}
+            >
+              <ChevronRight class="size-4" />
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            class="h-10 rounded-xl"
+            disabled={isSelectedDateToday}
+            onclick={() => navigateToDashboardDate(dashboardData.todayDate)}
+          >
+            오늘
+          </Button>
+        </div>
+      </div>
+    </section>
 
     <section class="space-y-2">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -127,6 +230,7 @@
               }
             }}
           >
+            <input type="hidden" name="date" value={dashboardData.selectedDate} />
             <Button
               type="submit"
               variant="outline"
@@ -150,13 +254,13 @@
         </div>
       {:else if dashboardData.aiSummary}
         <ul class="list-disc space-y-1.5 pl-5">
-          {#each dashboardData.aiSummary.bullets as bullet}
+          {#each dashboardData.aiSummary.bullets as bullet (bullet)}
             <li class="text-sm leading-snug">{bullet}</li>
           {/each}
         </ul>
       {:else if dashboardData.submittedTodayCount === 0}
         <div class="text-sm leading-relaxed text-muted-foreground">
-          오늘 제출한 학생이 없어 AI 요약을 생성하지 않았어요.
+          선택한 날짜에 제출한 학생이 없어 AI 요약을 생성하지 않았어요.
         </div>
       {:else}
         <p class="text-sm text-muted-foreground">요약을 불러올 수 없어요.</p>
@@ -175,13 +279,15 @@
             <p class="text-xl font-semibold tracking-tight">최근 기록</p>
           {/if}
         </div>
-        <p class="text-sm font-medium text-muted-foreground">최근 30일 선택 집계</p>
+        <p class="text-sm font-medium text-muted-foreground">
+          최근 30일 선택 집계 · {trendDateRangeLabel}
+        </p>
       </div>
 
       <div class="h-3 w-full overflow-hidden rounded-full bg-muted">
         {#if selTrendTotal > 0}
           <div class="flex h-full w-full">
-            {#each dashboardData.selTrends as trend}
+            {#each dashboardData.selTrends as trend (trend.competency.id)}
               {#if trend.count > 0}
                 <div
                   class="h-full"
@@ -195,7 +301,7 @@
 
       {#if canPlaceSelLabelsUnderSegments}
         <div class="hidden w-full md:flex">
-          {#each dashboardData.selTrends as trend}
+          {#each dashboardData.selTrends as trend (trend.competency.id)}
             {#if trend.count > 0}
               <div class="min-w-0 pt-1 text-xs" style={`width: ${selPercent(trend.count)}%;`}>
                 <div class="flex min-w-0 items-center gap-1.5">
@@ -216,7 +322,7 @@
         class="grid grid-cols-1 gap-y-2 md:grid-cols-4 md:gap-x-5"
         class:md:hidden={canPlaceSelLabelsUnderSegments}
       >
-        {#each dashboardData.selTrends as trend}
+        {#each dashboardData.selTrends as trend (trend.competency.id)}
           <div class="flex items-center justify-between gap-3 text-sm">
             <span class="flex min-w-0 items-center gap-2 font-medium text-foreground">
               <span
@@ -265,7 +371,7 @@
             name="names"
             rows="5"
             class="min-h-28 w-full resize-y rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-            placeholder={`줄바꿈을 기준으로 여러 학생을 추가하세요.  예시:\n\n김민지\n박서준\n이하율`}
+            placeholder={addStudentsPlaceholder}
             required
           ></textarea>
           <div class="flex items-center justify-end gap-2">
@@ -304,13 +410,13 @@
             <TableHeader>
               <TableRow class="bg-muted/40 hover:[&,&>svelte-css-wrapper]:[&>th,td]:bg-muted/40">
                 <TableHead class="w-[24%] px-4">학생</TableHead>
-                <TableHead class="w-[7rem] px-4">오늘 제출</TableHead>
+                <TableHead class="w-[7rem] px-4">제출</TableHead>
                 <TableHead class="px-4">일기 요약</TableHead>
                 <TableHead class="w-[10rem] px-4 text-right">관리</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {#each dashboardData.students as student}
+              {#each dashboardData.students as student (student.studentId)}
                 <TableRow>
                   <TableCell class="px-4 py-3 font-medium">
                     <Button
