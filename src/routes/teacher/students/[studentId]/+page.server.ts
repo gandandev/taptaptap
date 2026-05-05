@@ -1,7 +1,14 @@
 import { error, fail, redirect } from '@sveltejs/kit'
 
+import {
+  generateEmotionReflection,
+  hasEmotionReflectionAiProvider
+} from '$lib/server/ai/emotion-reflection'
 import { TEACHER_SESSION_COOKIE, verifyTeacherSessionToken } from '$lib/server/auth/teacher-session'
-import { listEmotionEntriesForStudent } from '$lib/server/repositories/emotion-entries'
+import {
+  listEmotionEntriesForStudent,
+  updateEmotionEntryReflection
+} from '$lib/server/repositories/emotion-entries'
 import {
   deleteStudentById,
   findStudentById,
@@ -11,6 +18,39 @@ import { checkRateLimit } from '$lib/server/security/rate-limit'
 import { getClientIp, isSameOriginMutationRequest } from '$lib/server/security/request'
 
 import type { Actions, PageServerLoad } from './$types'
+import type { EmotionEntryRecord } from '$lib/shared/emotion-types'
+
+async function fillMissingAiReflections(entries: EmotionEntryRecord[]) {
+  if (!hasEmotionReflectionAiProvider()) {
+    return entries
+  }
+
+  const hydratedEntries = [...entries]
+
+  for (const [index, entry] of hydratedEntries.entries()) {
+    if (entry.reflectionSummary && entry.reflectionAdvice) {
+      continue
+    }
+
+    const reflection = await generateEmotionReflection(entry.answers)
+
+    if (reflection.source !== 'ai') {
+      continue
+    }
+
+    await updateEmotionEntryReflection({ entryId: entry.id, reflection })
+
+    hydratedEntries[index] = {
+      ...entry,
+      reflectionSummary: reflection.summary,
+      reflectionAdvice: reflection.advice,
+      reflectionSource: reflection.source,
+      updatedAt: new Date()
+    }
+  }
+
+  return hydratedEntries
+}
 
 export const load: PageServerLoad = async ({ params }) => {
   const student = await findStudentById(params.studentId)
@@ -19,7 +59,7 @@ export const load: PageServerLoad = async ({ params }) => {
     throw error(404, '학생을 찾을 수 없어요.')
   }
 
-  const entries = await listEmotionEntriesForStudent(student.id)
+  const entries = await fillMissingAiReflections(await listEmotionEntriesForStudent(student.id))
 
   return {
     student: {

@@ -9,6 +9,10 @@ import type { EmotionAnswer, EmotionReflection } from '$lib/shared/emotion-types
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const DEFAULT_MODEL = 'openai/gpt-oss-120b:nitro'
 
+export function hasEmotionReflectionAiProvider() {
+  return Boolean(env.OPENROUTER_API_KEY?.trim())
+}
+
 function parseReflectionFromContent(
   content: string
 ): Pick<EmotionReflection, 'summary' | 'advice'> | null {

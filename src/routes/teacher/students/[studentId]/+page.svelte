@@ -8,7 +8,6 @@
     getEntryIntensityScore,
     getSelCompetencyForAnswers
   } from '$lib/shared/emotion-analysis'
-  import { buildLocalEmotionReflection } from '$lib/shared/emotion-reflection'
 
   import type { PageProps } from './$types'
 
@@ -41,11 +40,11 @@
   }
 
   function getEntryReflectionSummary(entry: PageProps['data']['entries'][number]) {
-    return entry.reflectionSummary ?? buildLocalEmotionReflection(entry.answers).summary
+    return entry.reflectionSummary ?? 'AI 요약을 아직 생성하지 못했어요.'
   }
 
   function getEntryReflectionSourceLabel(entry: PageProps['data']['entries'][number]) {
-    return entry.reflectionSummary && entry.reflectionSource === 'ai' ? 'AI 요약' : '로컬 요약'
+    return entry.reflectionSummary && entry.reflectionSource === 'ai' ? 'AI 요약' : '요약 생성 대기'
   }
 </script>
 
