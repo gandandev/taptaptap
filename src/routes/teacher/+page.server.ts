@@ -181,14 +181,15 @@ export const load: PageServerLoad = async ({ url }) => {
     }
 
     const fallbackNeededCompetency = getMostNeededCompetency(recentEntries, riskAlerts)
-    let storedAiSummary = cachedAiSummary
+    const summarySignature = buildTeacherDashboardSignature({ todayDate: selectedDate, students })
+    let storedAiSummary = cachedAiSummary?.signature === summarySignature ? cachedAiSummary : null
     let aiSummaryError: string | null = null
 
     if (!storedAiSummary) {
       try {
         storedAiSummary = await persistTeacherDashboardSummary({
           todayDate: selectedDate,
-          signature: buildTeacherDashboardSignature({ todayDate: selectedDate, students }),
+          signature: summarySignature,
           summary: await generateTeacherDashboardSummary({
             todayDate: selectedDate,
             todayStudents: students,
@@ -204,6 +205,8 @@ export const load: PageServerLoad = async ({ url }) => {
         if (!aiSummaryError) {
           throw error
         }
+
+        storedAiSummary = cachedAiSummary
       }
     }
 
