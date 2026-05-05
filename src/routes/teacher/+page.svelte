@@ -237,8 +237,8 @@
               size="icon"
               class="size-8 rounded-xl bg-transparent"
               disabled={dashboardData.submittedTodayCount === 0 || regeneratingSummary}
-              aria-label="AI 학급 요약 재생성"
-              title="AI 학급 요약 재생성"
+              aria-label={dashboardData.aiSummary ? 'AI 학급 요약 재생성' : 'AI 학급 요약 생성'}
+              title={dashboardData.aiSummary ? 'AI 학급 요약 재생성' : 'AI 학급 요약 생성'}
             >
               <RefreshCw class={`size-4 ${regeneratingSummary ? 'animate-spin' : ''}`} />
             </Button>
@@ -263,7 +263,9 @@
           선택한 날짜에 제출한 학생이 없어 AI 요약을 생성하지 않았어요.
         </div>
       {:else}
-        <p class="text-sm text-muted-foreground">요약을 불러올 수 없어요.</p>
+        <p class="text-sm text-muted-foreground">
+          저장된 요약이 없어요. 버튼을 눌러 한 번 생성하면 이 날짜의 요약으로 저장돼요.
+        </p>
       {/if}
     </section>
 

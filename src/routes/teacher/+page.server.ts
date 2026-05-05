@@ -4,7 +4,6 @@ import {
   buildTeacherDashboardSignature,
   generateTeacherDashboardSummary,
   getMostNeededCompetency,
-  hasTeacherDashboardAiProvider,
   TeacherDashboardAiGenerationError
 } from '$lib/server/ai/teacher-dashboard-summary'
 import {
@@ -171,7 +170,6 @@ export const load: PageServerLoad = async ({ url }) => {
       }
     }
 
-    const summarySignature = buildTeacherDashboardSignature({ todayDate: selectedDate, students })
     let cachedAiSummary: StoredTeacherDashboardSummary | null = null
 
     try {
@@ -183,44 +181,15 @@ export const load: PageServerLoad = async ({ url }) => {
     }
 
     const fallbackNeededCompetency = getMostNeededCompetency(recentEntries, riskAlerts)
-    const canReuseCachedSummary =
-      cachedAiSummary?.signature === summarySignature &&
-      (cachedAiSummary.source === 'ai' || !hasTeacherDashboardAiProvider())
-    let storedAiSummary: StoredTeacherDashboardSummary | null =
-      cachedAiSummary && canReuseCachedSummary ? cachedAiSummary : null
-    let aiSummaryError: string | null = null
 
-    if (!storedAiSummary) {
-      try {
-        storedAiSummary = await persistTeacherDashboardSummary({
-          todayDate: selectedDate,
-          signature: summarySignature,
-          summary: await generateTeacherDashboardSummary({
-            todayDate: selectedDate,
-            todayStudents: students,
-            recentEntries,
-            riskAlerts,
-            selTrends
-          }),
-          canPersist: true
-        })
-      } catch (error) {
-        aiSummaryError = getAiSummaryGenerationErrorMessage(error)
-
-        if (!aiSummaryError) {
-          throw error
-        }
-      }
-    }
-
-    const aiSummary = storedAiSummary
+    const aiSummary = cachedAiSummary
       ? {
-          bullets: storedAiSummary.bullets,
+          bullets: cachedAiSummary.bullets,
           neededCompetency:
-            SEL_COMPETENCIES[storedAiSummary.neededCompetencyId as keyof typeof SEL_COMPETENCIES] ??
+            SEL_COMPETENCIES[cachedAiSummary.neededCompetencyId as keyof typeof SEL_COMPETENCIES] ??
             fallbackNeededCompetency,
-          source: storedAiSummary.source,
-          generatedAt: storedAiSummary.generatedAt
+          source: cachedAiSummary.source,
+          generatedAt: cachedAiSummary.generatedAt
         }
       : null
 
@@ -233,7 +202,7 @@ export const load: PageServerLoad = async ({ url }) => {
       aiSummary,
       emotionTrends: summarizeEmotionTrends(recentEntries).slice(0, 6),
       selTrends,
-      dashboardError: aiSummaryError
+      dashboardError: null
     }
   } catch (error) {
     console.error('Failed to load teacher dashboard', error)
