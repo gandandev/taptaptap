@@ -49,6 +49,15 @@ const CONTEXT_CHOICES = [
   '내 마음속(나 자신)'
 ]
 
+const REGULATION_QUESTIONS_BY_CATEGORY: Record<EmotionCategoryId, string> = {
+  joy: '이 기분을 오래 간직하기 위해 나에게 어떤 선물을 줄까?',
+  pride: '이 기분을 오래 간직하기 위해 나에게 어떤 선물을 줄까?',
+  anger: '후회하지 않으려면 지금 무엇을 하는 게 좋을까?',
+  anxiety: '지금 내 마음을 가장 편안하게 해주는 선택은 뭘까?',
+  sadness: '지금 내 마음을 가장 편안하게 해주는 선택은 뭘까?',
+  low: '지금 내 마음을 가장 편안하게 해주는 선택은 뭘까?'
+}
+
 export const EMOTION_CATEGORIES: EmotionCategory[] = [
   {
     id: 'joy',
@@ -159,7 +168,9 @@ export const EMOTION_TREE: EmotionTree = {
       [
         regulationQuestionId(category.id),
         {
-          question: '다음에는 어떻게 나를 도와줄까?',
+          question:
+            REGULATION_QUESTIONS_BY_CATEGORY[category.id] ??
+            '그럼 이제 어떻게 하는 게 나를 위한 일이라고 생각해?',
           choices: toChoices(category.regulations, null),
           freeTextNext: null
         }
