@@ -37,11 +37,6 @@ type ParsedTeacherDashboardAiSummary = {
   neededCompetencyId: SelCompetencyId
 }
 
-type CompetencyScore = {
-  competency: SelCompetency
-  score: number
-}
-
 type PeerNameMentionSignal = {
   mentionedByStudentName: string
   mentionedStudentName: string

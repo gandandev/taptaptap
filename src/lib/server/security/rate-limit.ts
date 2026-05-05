@@ -27,7 +27,8 @@ const globalForRateLimit = globalThis as typeof globalThis & {
   __taptaptapRateLimitLastPruneAt?: number
 }
 
-const rateLimitStore = globalForRateLimit.__taptaptapRateLimitStore ?? new Map<string, RateLimitEntry>()
+const rateLimitStore =
+  globalForRateLimit.__taptaptapRateLimitStore ?? new Map<string, RateLimitEntry>()
 globalForRateLimit.__taptaptapRateLimitStore = rateLimitStore
 
 function makeStoreKey(bucket: string, key: string) {

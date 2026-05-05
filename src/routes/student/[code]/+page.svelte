@@ -166,7 +166,7 @@
 
     {#if displayedPairs.length > 0}
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {#each displayedPairs as item}
+        {#each displayedPairs as item (item.label)}
           <div class="quiet-panel rounded-2xl p-4">
             <p class="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
               {item.label}

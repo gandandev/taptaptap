@@ -66,12 +66,8 @@
           "name": "emotion_entries_student_id_students_id_fk",
           "tableFrom": "emotion_entries",
           "tableTo": "students",
-          "columnsFrom": [
-            "student_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["student_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -81,10 +77,7 @@
         "emotion_entries_student_date_unique": {
           "name": "emotion_entries_student_date_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "student_id",
-            "entry_date"
-          ]
+          "columns": ["student_id", "entry_date"]
         }
       },
       "policies": {},
@@ -143,9 +136,7 @@
         "students_code_unique": {
           "name": "students_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},

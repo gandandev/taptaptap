@@ -141,7 +141,7 @@
       <AlertDescription>아직 제출된 감정일기가 없어요.</AlertDescription>
     </Alert>
   {:else}
-    {#each data.entries as entry}
+    {#each data.entries as entry (entry.id)}
       {@const competency = getSelCompetencyForAnswers(entry.answers)}
       <section class="soft-panel space-y-4 rounded-[1.5rem] p-5">
         <div class="flex flex-wrap items-center gap-2">
@@ -161,7 +161,7 @@
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {#each getEmotionAnswerDisplayPairs(entry.answers) as answer}
+          {#each getEmotionAnswerDisplayPairs(entry.answers) as answer (answer.label)}
             <div class="quiet-panel rounded-2xl p-4">
               <p
                 class="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase"

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms'
+  import { goto } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import ChevronLeft from '@lucide/svelte/icons/chevron-left'
   import ChevronRight from '@lucide/svelte/icons/chevron-right'
   import RefreshCw from '@lucide/svelte/icons/refresh-cw'
@@ -67,6 +69,7 @@
   } as const
   let addingStudents = $state(false)
   let regeneratingSummary = $state(false)
+  let navigatingDate = $state<string | null>(null)
   let showAddStudents = $state(false)
   const addStudentsPlaceholder = `줄바꿈을 기준으로 여러 학생을 추가하세요.  예시:
 
@@ -124,8 +127,28 @@
     return `${Number(month)}.${Number(day)}`
   }
 
-  function navigateToDashboardDate(date: string) {
-    window.location.href = date === dashboardData.todayDate ? '/teacher' : `/teacher?date=${date}`
+  async function navigateToDashboardDate(date: string) {
+    if (date === dashboardData.selectedDate || navigatingDate) return
+
+    navigatingDate = date
+
+    try {
+      /* eslint-disable svelte/no-navigation-without-resolve */
+      await goto(
+        date === dashboardData.todayDate
+          ? resolve('/teacher')
+          : `${resolve('/teacher')}?date=${encodeURIComponent(date)}`,
+        {
+          keepFocus: true,
+          noScroll: true
+        }
+      )
+      /* eslint-enable svelte/no-navigation-without-resolve */
+    } catch (error) {
+      console.error('Failed to navigate teacher dashboard date', error)
+    } finally {
+      navigatingDate = null
+    }
   }
 </script>
 
@@ -164,6 +187,7 @@
               variant="outline"
               size="icon"
               class="size-10 rounded-xl bg-transparent"
+              disabled={Boolean(navigatingDate)}
               aria-label="이전 날짜"
               onclick={() => navigateToDashboardDate(addDays(dashboardData.selectedDate, -1))}
             >
@@ -180,7 +204,7 @@
               variant="outline"
               size="icon"
               class="size-10 rounded-xl bg-transparent"
-              disabled={isSelectedDateToday}
+              disabled={isSelectedDateToday || Boolean(navigatingDate)}
               aria-label="다음 날짜"
               onclick={() => navigateToDashboardDate(addDays(dashboardData.selectedDate, 1))}
             >
@@ -191,7 +215,7 @@
             type="button"
             variant="secondary"
             class="h-10 rounded-xl"
-            disabled={isSelectedDateToday}
+            disabled={isSelectedDateToday || Boolean(navigatingDate)}
             onclick={() => navigateToDashboardDate(dashboardData.todayDate)}
           >
             오늘
