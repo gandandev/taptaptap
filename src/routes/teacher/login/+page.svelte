@@ -44,5 +44,14 @@
         로그인
       {/if}
     </Button>
+
+    <Button
+      href="/"
+      variant="ghost"
+      size="sm"
+      class="mx-auto flex w-fit text-xs text-muted-foreground"
+    >
+      학생 로그인
+    </Button>
   </form>
 </div>
