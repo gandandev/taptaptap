@@ -153,7 +153,7 @@
 </script>
 
 <svelte:head>
-  <title>교사 대시보드 | 감정일기</title>
+  <title>교사 대시보드 | 마음톡톡</title>
 </svelte:head>
 
 <div class="mx-auto max-w-5xl">
@@ -174,7 +174,7 @@
     <section class="flex flex-col gap-4 border-b pb-6">
       <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div class="flex flex-col gap-1">
-          <h1 class="text-2xl font-semibold tracking-tight">감정일기 교사 대시보드</h1>
+          <h1 class="text-2xl font-semibold tracking-tight">마음톡톡 교사 대시보드</h1>
           <p class="text-sm text-muted-foreground">
             {selectedDateLabel} 기준 제출 현황과 최근 30일 흐름
           </p>

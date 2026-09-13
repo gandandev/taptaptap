@@ -28,7 +28,7 @@
 </script>
 
 <svelte:head>
-  <title>감정일기 | 학생 확인</title>
+  <title>마음톡톡 | 학생 확인</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center px-5 py-10">
@@ -39,7 +39,7 @@
     onsubmit={() => (loggingIn = true)}
   >
     <div class="space-y-1">
-      <h1 class="text-2xl font-semibold tracking-tight">감정일기</h1>
+      <h1 class="text-2xl font-semibold tracking-tight">마음톡톡</h1>
       <p class="text-sm text-muted-foreground">이름과 비밀번호를 입력해 주세요.</p>
     </div>
 

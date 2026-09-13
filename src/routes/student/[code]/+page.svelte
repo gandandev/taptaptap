@@ -116,7 +116,7 @@
 </script>
 
 <svelte:head>
-  <title>감정일기 | {data.student.name}</title>
+  <title>마음톡톡 | {data.student.name}</title>
 </svelte:head>
 
 <div class="app-texture min-h-screen px-4 py-6 sm:px-6 lg:py-10">
@@ -125,7 +125,7 @@
       class="soft-panel flex flex-wrap items-start justify-between gap-4 rounded-[1.5rem] p-5 sm:p-6"
     >
       <div class="space-y-2">
-        <Badge variant="secondary">감정일기</Badge>
+        <Badge variant="secondary">마음톡톡</Badge>
         <h1 class="text-3xl font-semibold tracking-tight text-balance">
           {data.student.name}의 감정일기
         </h1>

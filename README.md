@@ -1,4 +1,4 @@
-# TapTapTap 감정일기
+# 마음톡톡
 
 교사 대시보드와 학생 선택형 감정일기 앱입니다.
 
@@ -54,7 +54,7 @@ Cloudflare의 `nodejs_compat` 런타임이 `pg` 드라이버를 실행합니다.
 
 ### Pages 설정
 
-- 프로젝트 이름: `taptaptap`
+- 프로젝트 이름: `maumtoktok`
 - 빌드 명령: `pnpm build`
 - 빌드 출력 폴더: `.svelte-kit/cloudflare`
 - 프로덕션 브랜치: `main`
@@ -72,7 +72,7 @@ Cloudflare의 `nodejs_compat` 런타임이 `pg` 드라이버를 실행합니다.
 - `PG_CONNECTION_TIMEOUT_MS` : 기본값 `3000`
 - `PG_ALLOW_EXIT_ON_IDLE` : 기본값 `false`
 
-민감한 값은 Cloudflare 대시보드의 Workers & Pages > taptaptap > Settings > Variables and Secrets에서 Secret으로 저장하세요.
+민감한 값은 Cloudflare 대시보드의 Workers & Pages > maumtoktok > Settings > Variables and Secrets에서 Secret으로 저장하세요.
 
 ### CLI 배포
 

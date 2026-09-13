@@ -53,7 +53,7 @@ export async function generateEmotionReflection(
       headers: {
         authorization: `Bearer ${apiKey}`,
         'content-type': 'application/json',
-        'x-title': 'TapTapTap Emotion Diary'
+        'x-title': 'MaumTokTok Emotion Diary'
       },
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL || DEFAULT_MODEL,

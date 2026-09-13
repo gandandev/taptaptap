@@ -385,7 +385,7 @@ export async function generateTeacherDashboardSummary({
       headers: {
         authorization: `Bearer ${apiKey}`,
         'content-type': 'application/json',
-        'x-title': 'TapTapTap Teacher Dashboard'
+        'x-title': 'MaumTokTok Teacher Dashboard'
       },
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL || DEFAULT_MODEL,
