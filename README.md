@@ -47,39 +47,44 @@ pnpm db:migrate
 pnpm dev
 ```
 
-## Railway 배포 메모
+## Cloudflare Pages 배포
 
-### 권장 구성
+앱은 Cloudflare Pages Functions에서 실행하고 기존 PostgreSQL을 계속 사용합니다.
+Cloudflare의 `nodejs_compat` 런타임이 `pg` 드라이버를 실행합니다.
 
-- Railway Web Service (SvelteKit app)
-- Railway Postgres
+### Pages 설정
 
-### Railway Variables
+- 프로젝트 이름: `taptaptap`
+- 빌드 명령: `pnpm build`
+- 빌드 출력 폴더: `.svelte-kit/cloudflare`
+- 프로덕션 브랜치: `main`
 
-- `DATABASE_URL` : Railway Postgres 연결 문자열
-- `DATABASE_PRIVATE_URL` : 선택. 앱과 Postgres가 같은 Railway 프로젝트/환경에 있으면 private/internal 연결 문자열을 넣으세요. 설정되어 있으면 `DATABASE_URL`보다 우선 사용합니다.
+### Pages 환경변수
+
+- `DATABASE_URL` : Pages에서 접근할 수 있는 PostgreSQL 공개 연결 문자열. Railway 내부 주소는 사용할 수 없습니다.
 - `TEACHER_DASHBOARD_PASSWORD` : 교사 로그인 비밀번호
 - `TEACHER_SESSION_SECRET` : 긴 랜덤 문자열
 - `TZ` : `Asia/Seoul`
 - `OPENROUTER_API_KEY` : AI 요약/조언 생성용 OpenRouter 키
 - `OPENROUTER_MODEL` : 기본값 `openai/gpt-oss-120b:nitro`
-- `PG_POOL_MAX` : 기본값 `5`
+- `PG_POOL_MAX` : 기본값 `5`. Pages에서는 `1`을 권장합니다.
 - `PG_IDLE_TIMEOUT_MS` : 기본값 `60000`
 - `PG_CONNECTION_TIMEOUT_MS` : 기본값 `3000`
 - `PG_ALLOW_EXIT_ON_IDLE` : 기본값 `false`
 
-### Build / Start
+민감한 값은 Cloudflare 대시보드의 Workers & Pages > taptaptap > Settings > Variables and Secrets에서 Secret으로 저장하세요.
 
-- `railway.json`에 Build command, Start command, healthcheck가 설정되어 있습니다.
-- Start command: `node --max-old-space-size=128 build`
+### CLI 배포
 
-속도가 중요하면 Railway 서비스 설정에서 Serverless를 끄는 편이 낫습니다. Serverless는 idle 비용을 줄이는 대신 첫 요청 cold boot가 생기고, DB 커넥션도 다시 데워져서 교실에서 “눌렀는데 한참 걸림”처럼 보일 수 있습니다.
+Cloudflare 로그인과 환경변수 설정을 마친 뒤 배포합니다.
 
-앱과 Postgres가 같은 Railway 프로젝트/환경에 있다면 TCP Proxy/public URL 대신 private networking URL을 쓰세요. public URL은 외부 접속용이라 DB 왕복 지연이 커질 수 있습니다.
+```bash
+pnpm run deploy
+```
 
-### 배포 후 최초 실행
+### DB 마이그레이션
 
-Railway shell 또는 배포 파이프라인에서 마이그레이션 실행:
+마이그레이션은 Node.js 환경에서 별도로 실행합니다. Pages 배포 단계에서는 실행하지 않습니다.
 
 ```bash
 pnpm db:migrate
@@ -174,5 +179,6 @@ pnpm db:migrate
 ### 배포/라우팅
 
 - `/teacher/login`, `/teacher`, `/teacher/students/[studentId]`, `/student/[code]` 주요 라우트가 새로고침에서도 정상 동작하는지 확인
-- Railway에서 `pnpm build`, `pnpm start`, `pnpm db:migrate`가 성공하는지 확인
+- `pnpm check`, `pnpm build`, `pnpm db:migrate`가 성공하는지 확인
+- Pages의 `/health`가 응답하고 주요 라우트가 새로고침에서도 정상 동작하는지 확인
 - `TZ=Asia/Seoul` 기준으로 오늘 날짜 기록이 생성되고 같은 날 재제출 시 upsert 되는지 확인
